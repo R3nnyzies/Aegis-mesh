@@ -1,132 +1,128 @@
 package com.aegismesh.activities;
 
-import java.util.jar.Manifest;
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Bundle;
 
-import javax.naming.Context;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.lifecycle.Observer;
 
 import com.aegismesh.R;
-import com.aegismesh.models.User;
+import com.aegismesh.databinding.ActivityHomeBinding;
+import com.aegismesh.models.MeshStatus;
+import com.aegismesh.sensors.GestureDetector;
+import com.aegismesh.services.MeshService;
+import com.aegismesh.services.SOSService;
 
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.os.Build;
-import android.os.Bundle;
-import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
+/**
+ * Main dashboard shown after login.
+ *
+ * Responsibilities:
+ *  - Arm {@link GestureDetector} so a shake/wave gesture can trigger an SOS
+ *    from anywhere in the app, per the "gesture SOS activates the full
+ *    response chain in under 3 seconds" design principle.
+ *  - Surface live mesh network status (peer count, offline/online mode) by
+ *    observing {@link MeshService}.
+ *  - Provide the manual SOS button as an accessible fallback to the gesture.
+ */
 public class HomeActivity extends AppCompatActivity {
 
-    private static final int PERMISSION_REQUEST_CODE = 100;
+    private ActivityHomeBinding binding;
+    private GestureDetector gestureDetector;
 
-    private TextView tvGreeting, tvProfileStatus;
-    private Button btnGoToEmergency, btnEditProfile, btnLogout;
+    private final ActivityResultLauncher<String[]> requestPermissions =
+            registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), grants -> {
+                boolean allGranted = true;
+                for (Boolean granted : grants.values()) {
+                    allGranted &= Boolean.TRUE.equals(granted);
+                }
+                if (allGranted) {
+                    startMeshService();
+                } else {
+                    binding.textMeshStatus.setText(getString(R.string.permissions_required_for_mesh));
+                }
+            });
+
+    private final Observer<MeshStatus> meshStatusObserver = this::renderMeshStatus;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_home);
+        binding = ActivityHomeBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        tvGreeting = findViewById(R.id.tvGreeting);
-        tvProfileStatus = findViewById(R.id.tvProfileStatus);
-        btnGoToEmergency = findViewById(R.id.btnGoToEmergency);
-        btnEditProfile = findViewById(R.id.btnEditProfile);
-        btnLogout = findViewById(R.id.btnLogout);
+        gestureDetector = new GestureDetector(this, this::triggerSos);
 
-        // Check and request dangerous permissions immediately upon reaching the dashboard
-        checkPermissions();
+        binding.buttonSos.setOnClickListener(v -> triggerSos());
+        binding.buttonProfile.setOnClickListener(v ->
+                startActivity(new Intent(this, ProfileActivity.class)));
 
-        // Navigate to the SOS Mode
-        btnGoToEmergency.setOnClickListener(v -> {
-            startActivity(new Intent(HomeActivity.this, EmergencyActivity.class));
-        });
-
-        // Navigate to Medical Profile Setup
-        btnEditProfile.setOnClickListener(v -> {
-            startActivity(new Intent(HomeActivity.this, ProfileActivity.class));
-        });
-
-        // Handle Logout
-        btnLogout.setOnClickListener(v -> {
-            SharedPreferences.Editor editor = getSharedPreferences("AegisAuthPrefs", Context.MODE_PRIVATE).edit();
-            editor.putBoolean("isLoggedIn", false);
-            editor.apply();
-
-            startActivity(new Intent(HomeActivity.this, LoginActivity.class));
-            finish();
-        });
+        ensurePermissionsThenStartServices();
+        MeshService.getStatusLiveData().observe(this, meshStatusObserver);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // Update the UI every time the user returns to this screen (e.g., after editing profile)
-        User currentUser = ProfileActivity.getSavedUser(this);
-        
-        tvGreeting.setText("Hello, " + currentUser.getFullName());
-
-        // Check if the user has filled out their medical info for the AI
-        if (currentUser.getFullName().equals("Unknown Victim")) {
-            tvProfileStatus.setText("⚠️ Please setup your Medical Profile for AI Triage.");
-            tvProfileStatus.setTextColor(0xFFFF0000); // Red
-        } else {
-            tvProfileStatus.setText("✅ Medical Profile is Ready.");
-            tvProfileStatus.setTextColor(0xFF00AA00); // Green
-        }
-    }
-
-    /**
-     * Android 12+ requires explicit runtime permissions for Bluetooth Scanning and Advertising.
-     * We also need Location permissions for the Mesh routing logic.
-     */
-    private void checkPermissions() {
-        String[] requiredPermissions;
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            // Android 12+ specific Bluetooth permissions
-            requiredPermissions = new String[]{
-                    Manifest.permission.BLUETOOTH_SCAN,
-                    Manifest.permission.BLUETOOTH_ADVERTISE,
-                    Manifest.permission.BLUETOOTH_CONNECT,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-            };
-        } else {
-            // Legacy Android permissions
-            requiredPermissions = new String[]{
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-            };
-        }
-
-        boolean allGranted = true;
-        for (String permission : requiredPermissions) {
-            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
-                allGranted = false;
-                break;
-            }
-        }
-
-        if (!allGranted) {
-            ActivityCompat.requestPermissions(this, requiredPermissions, PERMISSION_REQUEST_CODE);
-        }
+        gestureDetector.start();
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == PERMISSION_REQUEST_CODE) {
-            for (int result : grantResults) {
-                if (result != PackageManager.PERMISSION_GRANTED) {
-                    Toast.makeText(this, "Warning: Mesh Networking requires Bluetooth and Location permissions to function in an emergency.", Toast.LENGTH_LONG).show();
-                    return;
-                }
+    protected void onPause() {
+        gestureDetector.stop();
+        super.onPause();
+    }
+
+    private void ensurePermissionsThenStartServices() {
+        String[] required = new String[] {
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_ADVERTISE,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+        };
+
+        List<String> missing = new ArrayList<>();
+        for (String permission : required) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                missing.add(permission);
             }
-            Toast.makeText(this, "All permissions granted. Aegis Mesh is ready.", Toast.LENGTH_SHORT).show();
         }
+
+        if (missing.isEmpty()) {
+            startMeshService();
+        } else {
+            requestPermissions.launch(missing.toArray(new String[0]));
+        }
+    }
+
+    private void startMeshService() {
+        MeshService.start(this);
+    }
+
+    private void renderMeshStatus(MeshStatus status) {
+        if (status instanceof MeshStatus.Online) {
+            binding.textMeshStatus.setText(getString(R.string.mesh_status_online));
+        } else if (status instanceof MeshStatus.OfflineRelay) {
+            int peerCount = ((MeshStatus.OfflineRelay) status).nearbyPeerCount;
+            binding.textMeshStatus.setText(getString(R.string.mesh_status_offline_relay, peerCount));
+        } else {
+            binding.textMeshStatus.setText(getString(R.string.mesh_status_disconnected));
+        }
+    }
+
+    /** Triggered by either the gesture sensor or the manual SOS button. */
+    private void triggerSos() {
+        binding.buttonSos.setEnabled(false);
+        SOSService.trigger(this);
+        startActivity(new Intent(this, EmergencyActivity.class));
+        binding.buttonSos.setEnabled(true);
     }
 }

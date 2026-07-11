@@ -1,104 +1,180 @@
 package com.aegismesh.activities;
 
-import javax.naming.Context;
-
-import com.aegismesh.R;
-import com.aegismesh.models.User;
-
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.text.TextUtils;
-import android.widget.Button;
-import android.widget.EditText;
+import android.view.View;
 import android.widget.Toast;
+
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.aegismesh.R;
+import com.aegismesh.databinding.ActivityProfileBinding;
+import com.aegismesh.models.MedicalProfile;
+import com.aegismesh.models.User;
+import com.aegismesh.models.VerificationLevel;
+import com.aegismesh.network.ApiCallback;
+import com.aegismesh.network.ApiClient;
+
+/**
+ * Lets the user view and edit their medical profile, emergency contacts,
+ * and identity verification status.
+ *
+ * Medical data here (blood group, allergies, chronic illnesses, current
+ * medications) is what gets shared with an accepted responder during an
+ * emergency - see MedicalProfileSharing in the system proposal. It is
+ * encrypted at rest and only decrypted for an authorized responder.
+ *
+ * Verification badges mirror the tiers described in the security proposal:
+ * phone (required at signup), national ID, and selfie/face match. Higher
+ * tiers unlock the "Verified Responder" badge required for volunteer
+ * response eligibility.
+ */
 public class ProfileActivity extends AppCompatActivity {
 
-    private static final String PREF_NAME = "AegisProfilePrefs";
-    private static final String KEY_FULL_NAME = "fullName";
-    private static final String KEY_AGE = "age";
-    private static final String KEY_ALLERGIES = "allergies";
-    private static final String KEY_CONDITIONS = "conditions";
+    public static final String EXTRA_ONBOARDING = "extra_onboarding";
 
-    private EditText etFullName, etAge, etAllergies, etConditions;
-    private Button btnSaveProfile;
+    private ActivityProfileBinding binding;
+    private boolean isOnboarding;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Assumes you have a layout file named activity_profile.xml
-        setContentView(R.layout.activity_profile);
+        binding = ActivityProfileBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        etFullName = findViewById(R.id.etFullName);
-        etAge = findViewById(R.id.etAge);
-        etAllergies = findViewById(R.id.etAllergies);
-        etConditions = findViewById(R.id.etConditions);
-        btnSaveProfile = findViewById(R.id.btnSaveProfile);
+        isOnboarding = getIntent().getBooleanExtra(EXTRA_ONBOARDING, false);
+        binding.buttonSave.setText(isOnboarding ? R.string.action_finish_setup : R.string.action_save);
 
-        // Load any previously saved data into the UI
-        loadProfileData();
+        binding.buttonSave.setOnClickListener(v -> saveProfile());
+        binding.buttonVerifyId.setOnClickListener(v -> startIdVerification());
+        binding.buttonVerifySelfie.setOnClickListener(v -> startSelfieVerification());
+        binding.buttonAddEmergencyContact.setOnClickListener(v -> addEmergencyContactRow());
 
-        btnSaveProfile.setOnClickListener(v -> saveProfileData());
+        loadCurrentUser();
     }
 
-    /**
-     * Reads from SharedPreferences and populates the EditTexts.
-     */
-    private void loadProfileData() {
-        SharedPreferences prefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        etFullName.setText(prefs.getString(KEY_FULL_NAME, ""));
-        etAge.setText(prefs.getString(KEY_AGE, ""));
-        etAllergies.setText(prefs.getString(KEY_ALLERGIES, ""));
-        etConditions.setText(prefs.getString(KEY_CONDITIONS, ""));
+    private void loadCurrentUser() {
+        setLoading(true);
+        ApiClient.getUserService().getCurrentUser(new ApiCallback<User>() {
+            @Override
+            public void onSuccess(User user) {
+                runOnUiThread(() -> {
+                    setLoading(false);
+                    bindUser(user);
+                });
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                runOnUiThread(() -> {
+                    setLoading(false);
+                    showToast(getString(R.string.error_load_profile_failed));
+                });
+            }
+        });
     }
 
-    /**
-     * Validates and saves the data securely on the device.
-     */
-    private void saveProfileData() {
-        String name = etFullName.getText().toString().trim();
-        String age = etAge.getText().toString().trim();
-        String allergies = etAllergies.getText().toString().trim();
-        String conditions = etConditions.getText().toString().trim();
+    private void bindUser(User user) {
+        MedicalProfile profile = user.medicalProfile;
+        binding.inputFullName.setText(user.fullName);
+        binding.inputBloodGroup.setText(profile.bloodGroup);
+        binding.inputAllergies.setText(profile.allergiesCsv());
+        binding.inputChronicIllnesses.setText(profile.chronicIllnessesCsv());
+        binding.inputMedications.setText(profile.currentMedicationsCsv());
 
-        if (TextUtils.isEmpty(name)) {
-            etFullName.setError("Full name is required for emergency responders.");
+        renderVerificationBadges(user.verificationLevel);
+    }
+
+    private void renderVerificationBadges(VerificationLevel level) {
+        binding.badgePhoneVerified.setVisibility(View.VISIBLE); // required at signup
+        binding.badgeIdVerified.setVisibility(
+                level.hasNationalId() ? View.VISIBLE : View.GONE);
+        binding.badgeFaceVerified.setVisibility(
+                level.hasFaceMatch() ? View.VISIBLE : View.GONE);
+
+        boolean isFullyVerified = level.hasNationalId() && level.hasFaceMatch();
+        binding.textVerifiedResponderStatus.setText(
+                isFullyVerified
+                        ? getString(R.string.verified_responder_badge_earned)
+                        : getString(R.string.verified_responder_badge_locked));
+
+        binding.buttonVerifyId.setEnabled(!level.hasNationalId());
+        binding.buttonVerifySelfie.setEnabled(level.hasNationalId() && !level.hasFaceMatch());
+    }
+
+    private void saveProfile() {
+        String fullName = textOf(binding.inputFullName);
+        if (fullName.isEmpty()) {
+            binding.inputFullName.setError(getString(R.string.error_field_required));
             return;
         }
 
-        // If left blank, default to "None" so the AI knows for sure
-        if (TextUtils.isEmpty(allergies)) allergies = "None known";
-        if (TextUtils.isEmpty(conditions)) conditions = "None known";
-        if (TextUtils.isEmpty(age)) age = "Unknown";
+        MedicalProfile profile = new MedicalProfile(
+                textOf(binding.inputBloodGroup),
+                splitCsv(textOf(binding.inputAllergies)),
+                splitCsv(textOf(binding.inputChronicIllnesses)),
+                splitCsv(textOf(binding.inputMedications))
+        );
 
-        SharedPreferences.Editor editor = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE).edit();
-        editor.putString(KEY_FULL_NAME, name);
-        editor.putString(KEY_AGE, age);
-        editor.putString(KEY_ALLERGIES, allergies);
-        editor.putString(KEY_CONDITIONS, conditions);
-        editor.apply(); // apply() is asynchronous and safe for the UI thread
+        setLoading(true);
+        ApiClient.getUserService().updateProfile(fullName, profile, new ApiCallback<User>() {
+            @Override
+            public void onSuccess(User user) {
+                runOnUiThread(() -> {
+                    setLoading(false);
+                    showToast(getString(R.string.profile_saved));
+                    if (isOnboarding) {
+                        finish();
+                    }
+                });
+            }
 
-        Toast.makeText(this, "Medical Profile Saved Securely", Toast.LENGTH_SHORT).show();
-        
-        // Return to the previous screen (e.g., HomeActivity)
-        finish();
+            @Override
+            public void onError(Throwable error) {
+                runOnUiThread(() -> {
+                    setLoading(false);
+                    showToast(getString(R.string.error_save_profile_failed));
+                });
+            }
+        });
     }
 
-    /**
-     * UTILITY METHOD: 
-     * Call this from EmergencyActivity or MeshService to instantly get the User's Profile
-     * when an SOS is triggered.
-     */
-    public static User getSavedUser(Context context) {
-        SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        
-        // If no profile exists yet, return a generic default (or handle it in the UI)
-        String name = prefs.getString(KEY_FULL_NAME, "Unknown Victim");
-        String age = prefs.getString(KEY_AGE, "Unknown");
-        String allergies = prefs.getString(KEY_ALLERGIES, "None known");
-        String conditions = prefs.getString(KEY_CONDITIONS, "None known");
+    private void startIdVerification() {
+        // Launches the national ID capture + verification flow. Implementation
+        // lives in a dedicated capture activity/module, invoked here.
+        IdVerificationActivity.start(this);
+    }
 
-        return new User(name, age, allergies, conditions);
+    private void startSelfieVerification() {
+        // Launches selfie capture for face-match verification, unlocked only
+        // after national ID verification succeeds.
+        SelfieVerificationActivity.start(this);
+    }
+
+    private void addEmergencyContactRow() {
+        binding.emergencyContactsContainer.addView(
+                EmergencyContactRowView.newInstance(this));
+    }
+
+    private String textOf(android.widget.EditText field) {
+        return field.getText() == null ? "" : field.getText().toString().trim();
+    }
+
+    private String[] splitCsv(String csv) {
+        if (csv.isEmpty()) return new String[0];
+        String[] parts = csv.split(",");
+        for (int i = 0; i < parts.length; i++) {
+            parts[i] = parts[i].trim();
+        }
+        return parts;
+    }
+
+    private void setLoading(boolean loading) {
+        binding.progressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
+        binding.buttonSave.setEnabled(!loading);
+    }
+
+    private void showToast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 }
