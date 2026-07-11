@@ -2,6 +2,8 @@ package com.aegismesh.network;
 
 import android.util.Log;
 
+import java.net.URI;
+
 import com.aegismesh.models.Emergency;
 
 import org.json.JSONObject;
@@ -24,7 +26,7 @@ public class ApiClient {
     public static final String BASE_URL = getBaseUrl();
 
     // Derived Endpoints
-    public static final String ENDPOINT_EMERGENCY = combinePath(BASE_URL, "emergency");
+    public static final String ENDPOINT_EMERGENCY = combinePath(BASE_URL, "api/v1/emergency/dispatch");
     public static final String ENDPOINT_LOGIN = combinePath(BASE_URL, "login");
     public static final String ENDPOINT_REGISTER = combinePath(BASE_URL, "register");
     public static final String ENDPOINT_HOSPITALS = combinePath(BASE_URL, "hospitals");
@@ -62,17 +64,18 @@ public class ApiClient {
      * Synchronously sends emergency data to the FastAPI backend.
      * MUST be run on a background thread.
      *
-     * @param emergency The emergency model instance.
+     * @param emergency The emergency model instance containing location/trigger data.
+     * @param victim The user model containing medical history for AI Triage.
      * @throws Exception If connection fails, request times out, or server returns non-2xx code.
      */
-    public static void sendEmergency(Emergency emergency) throws Exception {
-        if (emergency == null) {
-            throw new IllegalArgumentException("Emergency object cannot be null");
+    public static void sendEmergency(Emergency emergency, User victim) throws Exception {
+        if (emergency == null || victim == null) {
+            throw new IllegalArgumentException("Emergency and User objects cannot be null");
         }
 
         HttpURLConnection urlConnection = null;
         try {
-            URL url = new URL(ENDPOINT_EMERGENCY);
+            URL url = URI.create(ENDPOINT_EMERGENCY).toURL();
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setRequestMethod("POST");
             urlConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
@@ -81,8 +84,8 @@ public class ApiClient {
             urlConnection.setReadTimeout(TIMEOUT_MS);
             urlConnection.setDoOutput(true);
 
-            // Generate JSON payload matching backend structure
-            String jsonPayload = emergency.toBackendJsonString();
+            // Generate JSON payload matching backend structure (NOW INCLUDES USER PROFILE)
+            String jsonPayload = emergency.toBackendJsonString(victim);
             Log.d(TAG, "Sending JSON to " + ENDPOINT_EMERGENCY + ": " + jsonPayload);
 
             // Write payload
@@ -104,7 +107,22 @@ public class ApiClient {
                         response.append(responseLine.trim());
                     }
                 }
-                Log.d(TAG, "Emergency reported successfully: " + response.toString());
+                
+                String rawResponse = response.toString();
+                Log.d(TAG, "Raw Backend Response: " + rawResponse);
+
+                // ==========================================
+                // NEW: Parse the AI and Hospital Routing Data!
+                // ==========================================
+                JSONObject jsonResponse = new JSONObject(rawResponse);
+                JSONObject dispatchData = jsonResponse.getJSONObject("dispatch_data");
+                
+                String aiInstructions = dispatchData.getString("ai_first_aid_instructions");
+                Hospital bestHospital = Hospital.fromBackendJson(dispatchData.getJSONObject("recommended_facility"));
+
+                Log.i(TAG, ">>> AI TRIAGE INSTRUCTIONS RECIEVED <<<\n" + aiInstructions);
+                Log.i(TAG, ">>> ROUTING TO HOSPITAL: " + bestHospital.getName() + " (" + bestHospital.getDistance() + ") <<<");
+                
             } else {
                 // Read error stream
                 StringBuilder errorResponse = new StringBuilder();
@@ -124,5 +142,4 @@ public class ApiClient {
                 urlConnection.disconnect();
             }
         }
-    }
-}
+    }}
