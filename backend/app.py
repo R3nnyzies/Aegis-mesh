@@ -1,3 +1,9 @@
+import sys
+import os
+# This tells Python to look at the root folder of your project
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
 from fastapi import FastAPI
 from backend.database import db  # Initializes SQLite DB on startup
 

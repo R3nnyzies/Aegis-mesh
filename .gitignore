@@ -1,2 +1,4 @@
 tree.md
 .vscode
+.venv
+__pycache__
