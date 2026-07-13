@@ -4,7 +4,10 @@ import android.util.Log;
 
 import java.net.URI;
 
+import com.aegismesh.models.DispatchResult;
 import com.aegismesh.models.Emergency;
+import com.aegismesh.models.Hospital;
+import com.aegismesh.models.User;
 
 import org.json.JSONObject;
 
@@ -15,10 +18,12 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 /**
- * Handles HTTP network communication with the Aegis Mesh FastAPI backend.
- * All endpoint paths are derived dynamically from a base URL configured in BuildConfig.BASE_URL.
+ * Handles HTTP network communication with the Aegis Mesh FastAPI backend. All
+ * endpoint paths are derived dynamically from a base URL configured in
+ * BuildConfig.BASE_URL.
  */
 public class ApiClient {
+
     private static final String TAG = "ApiClient";
     private static final int TIMEOUT_MS = 10000; // 10 seconds timeout
 
@@ -34,7 +39,8 @@ public class ApiClient {
 
     /**
      * Resolves the BASE_URL dynamically via reflection from BuildConfig.
-     * Fallback to default emulator IP (10.0.2.2) if not defined or ifBuildConfig is missing at compile time.
+     * Fallback to default emulator IP (10.0.2.2) if not defined or
+     * ifBuildConfig is missing at compile time.
      */
     private static String getBaseUrl() {
         try {
@@ -50,7 +56,8 @@ public class ApiClient {
     }
 
     /**
-     * Safely combines base URL and endpoint path, resolving slash formatting issues.
+     * Safely combines base URL and endpoint path, resolving slash formatting
+     * issues.
      */
     private static String combinePath(String base, String path) {
         if (base.endsWith("/")) {
@@ -61,14 +68,18 @@ public class ApiClient {
     }
 
     /**
-     * Synchronously sends emergency data to the FastAPI backend.
-     * MUST be run on a background thread.
+     * Synchronously sends emergency data to the FastAPI backend. MUST be run on
+     * a background thread.
      *
-     * @param emergency The emergency model instance containing location/trigger data.
+     * @param emergency The emergency model instance containing location/trigger
+     * data.
      * @param victim The user model containing medical history for AI Triage.
-     * @throws Exception If connection fails, request times out, or server returns non-2xx code.
+     * @return a {@link DispatchResult} containing the AI-generated first-aid
+     * instructions and the hospital the emergency was routed to.
+     * @throws Exception If connection fails, request times out, or server
+     * returns non-2xx code.
      */
-    public static void sendEmergency(Emergency emergency, User victim) throws Exception {
+    public static DispatchResult sendEmergency(Emergency emergency, User victim) throws Exception {
         if (emergency == null || victim == null) {
             throw new IllegalArgumentException("Emergency and User objects cannot be null");
         }
@@ -107,22 +118,23 @@ public class ApiClient {
                         response.append(responseLine.trim());
                     }
                 }
-                
+
                 String rawResponse = response.toString();
                 Log.d(TAG, "Raw Backend Response: " + rawResponse);
 
                 // ==========================================
-                // NEW: Parse the AI and Hospital Routing Data!
+                // Parse the AI and Hospital Routing Data
                 // ==========================================
                 JSONObject jsonResponse = new JSONObject(rawResponse);
                 JSONObject dispatchData = jsonResponse.getJSONObject("dispatch_data");
-                
+
                 String aiInstructions = dispatchData.getString("ai_first_aid_instructions");
                 Hospital bestHospital = Hospital.fromBackendJson(dispatchData.getJSONObject("recommended_facility"));
 
                 Log.i(TAG, ">>> AI TRIAGE INSTRUCTIONS RECIEVED <<<\n" + aiInstructions);
                 Log.i(TAG, ">>> ROUTING TO HOSPITAL: " + bestHospital.getName() + " (" + bestHospital.getDistance() + ") <<<");
-                
+
+                return new DispatchResult(aiInstructions, bestHospital);
             } else {
                 // Read error stream
                 StringBuilder errorResponse = new StringBuilder();
@@ -142,4 +154,5 @@ public class ApiClient {
                 urlConnection.disconnect();
             }
         }
-    }}
+    }
+}

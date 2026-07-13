@@ -8,6 +8,7 @@ import java.io.Serializable;
  * Represents an emergency event in the Aegis Mesh application.
  */
 public class Emergency implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
     // Status Constants
@@ -29,7 +30,7 @@ public class Emergency implements Serializable {
     }
 
     public Emergency(String emergencyId, String userId, String triggerType, String emergencyType,
-                     double latitude, double longitude, long timestamp, String status) {
+            double latitude, double longitude, long timestamp, String status) {
         this.emergencyId = emergencyId;
         this.userId = userId;
         this.triggerType = triggerType;
@@ -106,31 +107,29 @@ public class Emergency implements Serializable {
     }
 
     /**
-     * Converts this emergency object into a JSON String matching the backend schema:
-     * {
-     *   "emergencyId": "...",
-     *   "userId": "...",
-     *   "type": "...",
-     *   "latitude": "...",
-     *   "longitude": "...",
-     *   "timestamp": "...",
-     *   "trigger": "..."
-     * }
+     * Converts this emergency object, together with the victim's medical
+     * profile, into a JSON String matching the FastAPI backend schema: {
+     * "victim_name": "...", "condition": "...", "latitude": ..., "longitude":
+     * ..., "profile": { ... } }
+     *
+     * @param victim the User whose full name and medical profile should be
+     * embedded alongside this emergency's data in the outgoing payload
+     * @return a JSON string ready to be sent to the backend
+     * @throws JSONException if the JSON object cannot be constructed
      */
-    public String toBackendJsonString() throws JSONException {
+    public String toBackendJsonString(User victim) throws JSONException {
         JSONObject json = new JSONObject();
-        json.put("emergencyId", emergencyId);
-        json.put("userId", userId);
-        json.put("type", emergencyType);
-        json.put("latitude", String.valueOf(latitude));
-        json.put("longitude", String.valueOf(longitude));
-        json.put("timestamp", String.valueOf(timestamp));
-        json.put("trigger", triggerType);
+        json.put("victim_name", victim.getFullName());
+        json.put("condition", emergencyType);
+        json.put("latitude", latitude);
+        json.put("longitude", longitude);
+        json.put("profile", victim.toProfileJsonObject());
         return json.toString();
     }
 
     /**
-     * Converts this emergency object into a complete local JSON representation for storage.
+     * Converts this emergency object into a complete local JSON representation
+     * for storage.
      */
     public String toJsonString() throws JSONException {
         JSONObject json = new JSONObject();
@@ -151,14 +150,14 @@ public class Emergency implements Serializable {
     public static Emergency fromJsonString(String jsonStr) throws JSONException {
         JSONObject json = new JSONObject(jsonStr);
         return new Emergency(
-            json.getString("emergencyId"),
-            json.getString("userId"),
-            json.getString("triggerType"),
-            json.getString("emergencyType"),
-            json.getDouble("latitude"),
-            json.getDouble("longitude"),
-            json.getLong("timestamp"),
-            json.getString("status")
+                json.getString("emergencyId"),
+                json.getString("userId"),
+                json.getString("triggerType"),
+                json.getString("emergencyType"),
+                json.getDouble("latitude"),
+                json.getDouble("longitude"),
+                json.getLong("timestamp"),
+                json.getString("status")
         );
     }
 }

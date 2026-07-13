@@ -26,8 +26,11 @@ import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
 import com.aegismesh.database.EmergencyDbHelper;
+import com.aegismesh.models.DispatchResult;
 import com.aegismesh.models.Emergency;
+import com.aegismesh.models.User;
 import com.aegismesh.network.ApiClient;
+import com.aegismesh.session.UserSession;
 
 import java.util.List;
 import java.util.UUID;
@@ -37,11 +40,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
- * The central coordinator responsible for managing emergency events.
- * It coordinates SOS activation, foreground services, GPS location retrieval,
- * backend transmissions, peer-to-peer mesh failovers, retries, and local persistence.
+ * The central coordinator responsible for managing emergency events. It
+ * coordinates SOS activation, foreground services, GPS location retrieval,
+ * backend transmissions, peer-to-peer mesh failovers, retries, and local
+ * persistence.
  */
 public class SOSService extends Service {
+
     private static final String TAG = "SOSService";
 
     // Intent Actions and Extras
@@ -174,20 +179,21 @@ public class SOSService extends Service {
     public void onDestroy() {
         super.onDestroy();
         Log.i(TAG, "SOSService onDestroy: Cleaning up resources...");
-        
+
         unregisterNetworkCallback();
-        
+
         if (isLocationServiceBound) {
             unbindService(locationServiceConnection);
             isLocationServiceBound = false;
         }
-        
+
         safeUnbindMesh();
         executor.shutdown();
     }
 
     /**
-     * Executes the main coordinate aggregation and communication failover sequence.
+     * Executes the main coordinate aggregation and communication failover
+     * sequence.
      */
     private void processSos(String userId, String triggerType, String emergencyType, String additionalNotes) {
         updateNotification("Emergency Mode Active", "Sending SOS Alert...");
@@ -268,9 +274,16 @@ public class SOSService extends Service {
                 Emergency.STATUS_PENDING
         );
 
+        // Resolve the logged-in victim's profile from the cached session.
+        // The backend payload (toBackendJsonString) requires this to embed medical/profile data.
+        User victim = UserSession.getInstance().getCurrentUser();
+        if (victim == null) {
+            Log.w(TAG, "No cached User found in UserSession; backend payload will be incomplete.");
+        }
+
         // Network check
         if (isNetworkAvailable()) {
-            sendViaInternet(emergency);
+            sendViaInternet(emergency, victim);
         } else {
             Log.i(TAG, "Switching to mesh mode");
             dbHelper.insertOrUpdate(emergency);
@@ -280,15 +293,29 @@ public class SOSService extends Service {
 
     /**
      * Attempts internet-based API delivery with a retry logic.
+     *
+     * @param emergency the emergency event to transmit
+     * @param victim the logged-in user's profile, embedded in the backend
+     * payload; may be {@code null} if the session cache was unavailable, in
+     * which case the backend call is skipped and the alert falls back to mesh
+     * delivery
      */
-    private void sendViaInternet(Emergency emergency) {
+    private void sendViaInternet(Emergency emergency, User victim) {
         updateNotification("Emergency Mode Active", "Sending emergency alert...");
         Log.i(TAG, "Sending to backend");
 
+        if (victim == null) {
+            Log.e(TAG, "Cannot send to backend without a User profile. Falling back to mesh.");
+            dbHelper.insertOrUpdate(emergency);
+            sendViaMeshNetwork(emergency);
+            return;
+        }
+
         boolean success = false;
+        DispatchResult dispatchResult = null;
         for (int attempt = 1; attempt <= RETRY_MAX_ATTEMPTS; attempt++) {
             try {
-                ApiClient.sendEmergency(emergency);
+                dispatchResult = ApiClient.sendEmergency(emergency, victim);
                 success = true;
                 break;
             } catch (Exception e) {
@@ -309,7 +336,16 @@ public class SOSService extends Service {
             Log.i(TAG, "Backend success");
             emergency.setStatus(Emergency.STATUS_DELIVERED);
             dbHelper.insertOrUpdate(emergency);
-            updateNotification("Emergency Mode Active", "Emergency alert delivered successfully.");
+
+            // Surface the AI first-aid guidance and hospital routing decision.
+            // TODO: broadcast/pass dispatchResult to EmergencyActivity for on-screen display
+            // once that UI is built, rather than relying on the notification text alone.
+            String hospitalName = "nearest facility";
+            if (dispatchResult != null && dispatchResult.getRecommendedHospital() != null) {
+                hospitalName = dispatchResult.getRecommendedHospital().getName();
+                Log.i(TAG, "AI first-aid instructions: " + dispatchResult.getAiFirstAidInstructions());
+            }
+            updateNotification("Emergency Mode Active", "Alert delivered. Routed to " + hospitalName + ".");
             Log.i(TAG, "Emergency completed");
         } else {
             Log.w(TAG, "All internet retries failed. Storing locally as FAILED and switching to mesh.");
@@ -324,7 +360,7 @@ public class SOSService extends Service {
      */
     private void sendViaMeshNetwork(final Emergency emergency) {
         updateNotification("Emergency Mode Active", "Internet unavailable. Using mesh network.");
-        
+
         synchronized (meshLock) {
             if (meshService == null) {
                 Intent meshIntent = new Intent(this, MeshService.class);
@@ -376,7 +412,8 @@ public class SOSService extends Service {
     }
 
     /**
-     * Installs ConnectivityManager.NetworkCallback to recover failed emergency alerts in real-time.
+     * Installs ConnectivityManager.NetworkCallback to recover failed emergency
+     * alerts in real-time.
      */
     private void registerNetworkCallback() {
         final ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -413,7 +450,8 @@ public class SOSService extends Service {
     }
 
     /**
-     * Queries the local database for pending/failed reports and transmits them upon connection recovery.
+     * Queries the local database for pending/failed reports and transmits them
+     * upon connection recovery.
      */
     private void triggerImmediateResend() {
         executor.execute(new Runnable() {
@@ -424,10 +462,19 @@ public class SOSService extends Service {
                     return;
                 }
 
+                User victim = UserSession.getInstance().getCurrentUser();
+                if (victim == null) {
+                    Log.w(TAG, "No cached User found in UserSession; skipping resend until session is restored.");
+                    return;
+                }
+
                 Log.i(TAG, "Internet restored: Resending " + unsentList.size() + " unsent emergency alert(s)...");
                 for (Emergency emergency : unsentList) {
                     try {
-                        ApiClient.sendEmergency(emergency);
+                        DispatchResult dispatchResult = ApiClient.sendEmergency(emergency, victim);
+                        if (dispatchResult != null && dispatchResult.getRecommendedHospital() != null) {
+                            Log.i(TAG, "Resent alert routed to " + dispatchResult.getRecommendedHospital().getName());
+                        }
                         dbHelper.updateStatus(emergency.getEmergencyId(), Emergency.STATUS_DELIVERED);
                         Log.i(TAG, "Emergency alert " + emergency.getEmergencyId() + " successfully resent and delivered.");
                         updateNotification("Emergency Mode Active", "Emergency alert delivered successfully.");
@@ -469,17 +516,19 @@ public class SOSService extends Service {
 
     private boolean isNetworkAvailable() {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (cm == null) return false;
+        if (cm == null) {
+            return false;
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             Network network = cm.getActiveNetwork();
-            if (network == null) return false;
+            if (network == null) {
+                return false;
+            }
             NetworkCapabilities capabilities = cm.getNetworkCapabilities(network);
-            return capabilities != null && (
-                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
-                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
-                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
-            );
+            return capabilities != null && (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
+                    || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+                    || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET));
         } else {
             @SuppressWarnings("deprecation")
             android.net.NetworkInfo info = cm.getActiveNetworkInfo();
@@ -532,7 +581,6 @@ public class SOSService extends Service {
     }
 
     // --- Input Sanitation & Validation Helpers ---
-
     private String sanitizeInput(String input, String defaultValue) {
         if (input == null || input.trim().isEmpty()) {
             return defaultValue;
@@ -542,7 +590,9 @@ public class SOSService extends Service {
     }
 
     private String validateTriggerType(String trigger) {
-        if (trigger == null) return MANUAL_TRIGGER;
+        if (trigger == null) {
+            return MANUAL_TRIGGER;
+        }
         switch (trigger) {
             case MANUAL_TRIGGER:
             case GESTURE_TRIGGER:
@@ -555,7 +605,9 @@ public class SOSService extends Service {
     }
 
     private String sanitizeNotes(String notes) {
-        if (notes == null) return "";
+        if (notes == null) {
+            return "";
+        }
         // Sanitize note strings against potential script injections, capping length at 250 characters.
         String filtered = notes.replaceAll("[<>\"'&/\\\\]", "").trim();
         if (filtered.length() > 250) {
