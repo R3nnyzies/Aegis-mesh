@@ -45,7 +45,9 @@ public class EmergencyResendWorker extends Worker {
         for (Emergency emergency : unsentList) {
             try {
                 Log.d(TAG, "Retransmitting emergency ID: " + emergency.getEmergencyId());
-                ApiClient.sendEmergency(emergency);
+                // Fetch the saved profile from the device and send it with the emergency for AI Triage
+                com.aegismesh.models.User victim = com.aegismesh.activities.ProfileActivity.getSavedUser(getApplicationContext());
+                ApiClient.sendEmergency(emergency, victim);
                 
                 // If transmission succeeds, mark as delivered
                 dbHelper.updateStatus(emergency.getEmergencyId(), Emergency.STATUS_DELIVERED);

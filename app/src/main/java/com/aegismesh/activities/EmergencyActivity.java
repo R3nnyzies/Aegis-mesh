@@ -3,6 +3,7 @@ package com.aegismesh.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -66,17 +67,29 @@ public class EmergencyActivity extends AppCompatActivity {
         binding.buttonCancelSos.setOnClickListener(v -> confirmCancel());
         binding.buttonEscalate.setOnClickListener(v -> escalate());
 
-                // TEMPORARY TEST BUTTON FOR EMULATOR
+        // IMPROVED TEST BUTTON FOR EMULATOR
+        android.widget.FrameLayout container = new android.widget.FrameLayout(this);
+        container.setLayoutParams(new android.widget.FrameLayout.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
+                android.view.Gravity.BOTTOM));
+        container.setPadding(32, 32, 32, 100); // Pad from bottom
+
         Button btnForceSos = new Button(this);
         btnForceSos.setText("FORCE TRIGGER SOS (TEST)");
+        btnForceSos.setBackgroundColor(0xFFFF0000); // Red
+        btnForceSos.setTextColor(0xFFFFFFFF); // White
         btnForceSos.setOnClickListener(v -> {
-            // Manually trigger the callback as if C++ detected 3 shakes
             onSosTriggered();
         });
-        // Add it to your layout (Assuming your root layout is a LinearLayout or ConstraintLayout)
-        ((android.view.ViewGroup) findViewById(android.R.id.content)).addView(btnForceSos);
+        container.addView(btnForceSos);
+        ((android.view.ViewGroup) findViewById(android.R.id.content)).addView(container);
 
         observeActiveEmergency();
+    }
+
+    private void onSosTriggered() {
+        SOSService.trigger(this);
     }
 
     private void observeActiveEmergency() {
@@ -88,22 +101,20 @@ public class EmergencyActivity extends AppCompatActivity {
 
     private void renderEmergency(@Nullable Emergency emergency) {
         if (emergency == null) {
-            // Emergency was resolved or cancelled elsewhere (e.g. another device).
-            finish();
+            // Only finish if we were actually tracking a specific emergency
+            if (emergencyId != null) {
+                finish();
+            }
             return;
         }
 
-        binding.textEmergencyType.setText(emergency.type.getDisplayName());
-        binding.textMeshRelayStatus.setText(
-                getResources().getQuantityString(
-                        R.plurals.mesh_relay_peer_count,
-                        emergency.relayHopCount,
-                        emergency.relayHopCount));
+        binding.textEmergencyType.setText(emergency.getEmergencyType());
+        binding.textMeshRelayStatus.setText("Relayed by mesh"); // Placeholder or use getter if available
 
         binding.textLocationStatus.setText(
-                emergency.locationConfirmed
+                emergency.getStatus().equals(Emergency.STATUS_DELIVERED)
                         ? getString(R.string.location_shared_exact)
-                        : getString(R.string.location_shared_approximate, emergency.approximateRadiusMeters));
+                        : getString(R.string.location_shared_approximate, 100)); // Placeholder radius
     }
 
     private void appendTriageMessage(@Nullable TriageMessage message) {
@@ -119,11 +130,11 @@ public class EmergencyActivity extends AppCompatActivity {
         }
 
         binding.groupResponder.setVisibility(View.VISIBLE);
-        binding.textResponderName.setText(responder.displayName);
+        binding.textResponderName.setText(responder.getName());
         binding.textResponderTrustScore.setText(
-                getString(R.string.responder_trust_score, responder.trustScore, responder.completedAssists));
-        binding.textResponderEta.setText(getString(R.string.responder_eta, responder.etaMinutes));
-        binding.iconVerifiedBadge.setVisibility(responder.isVerified ? View.VISIBLE : View.GONE);
+                getString(R.string.responder_trust_score, responder.getTrustScore(), responder.getAssists()));
+        binding.textResponderEta.setText(getString(R.string.responder_eta, responder.getEtaMinutes()));
+        binding.iconVerifiedBadge.setVisibility(responder.isVerified() ? View.VISIBLE : View.GONE);
     }
 
     private void renderHospital(@Nullable Hospital hospital) {
@@ -133,8 +144,8 @@ public class EmergencyActivity extends AppCompatActivity {
         }
 
         binding.groupHospital.setVisibility(View.VISIBLE);
-        binding.textHospitalName.setText(hospital.name);
-        binding.textHospitalReason.setText(hospital.routingReason);
+        binding.textHospitalName.setText(hospital.getName());
+        binding.textHospitalReason.setText(hospital.routingReason != null ? hospital.routingReason : "Recommended Facility");
         binding.textHospitalDistance.setText(getString(R.string.hospital_distance_km, hospital.distanceKm));
     }
 

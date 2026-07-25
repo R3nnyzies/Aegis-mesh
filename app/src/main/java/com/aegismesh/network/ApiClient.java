@@ -7,6 +7,7 @@ import java.net.URI;
 import com.aegismesh.models.DispatchResult;
 import com.aegismesh.models.Emergency;
 import com.aegismesh.models.Hospital;
+import com.aegismesh.models.MedicalProfile;
 import com.aegismesh.models.User;
 
 import org.json.JSONObject;
@@ -36,6 +37,40 @@ public class ApiClient {
     public static final String ENDPOINT_REGISTER = combinePath(BASE_URL, "register");
     public static final String ENDPOINT_HOSPITALS = combinePath(BASE_URL, "hospitals");
     public static final String ENDPOINT_TRIAGE = combinePath(BASE_URL, "triage");
+
+    public static UserService getUserService() {
+        return new UserService() {
+            @Override
+            public void getCurrentUser(ApiCallback<User> callback) {
+                // Mock implementation for now to fix build errors
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(1000);
+                        callback.onSuccess(new User("John Doe", "30", "Peanuts", "Asthma"));
+                    } catch (InterruptedException e) {
+                        callback.onError(e);
+                    }
+                }).start();
+            }
+
+            @Override
+            public void updateProfile(String fullName, MedicalProfile profile, ApiCallback<User> callback) {
+                // Mock implementation for now to fix build errors
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(1000);
+                        String allergiesCsv = profile.allergies != null ? android.text.TextUtils.join(",", profile.allergies) : "";
+                        String chronicCsv = profile.chronicIllnesses != null ? android.text.TextUtils.join(",", profile.chronicIllnesses) : "";
+                        User user = new User(fullName, "30", allergiesCsv, chronicCsv);
+                        user.medicalProfile = profile;
+                        callback.onSuccess(user);
+                    } catch (InterruptedException e) {
+                        callback.onError(e);
+                    }
+                }).start();
+            }
+        };
+    }
 
     /**
      * Resolves the BASE_URL dynamically via reflection from BuildConfig.

@@ -1,14 +1,20 @@
 #include <jni.h>
 #include <string>
 
-// Declare the functions from our other files
+// C++ functions (from gesture_processing.cpp - these are scrambled)
 extern void setScreenHoldState(bool isHeld);
 extern bool processAccelerometerData(float x, float y, float z);
-extern void buildSosPacket(uint32_t msg_id, const char* name, const char* condition, uint8_t* output_buffer);
-extern bool processIncomingPacket(const uint8_t* input_buffer, uint8_t* output_buffer_to_forward);
+
+// C functions (from ble_mesh.cpp and wifi_direct.cpp - these are NOT scrambled)
+extern "C" {
+void buildSosPacket(uint32_t msg_id, const char* name, const char* condition, uint8_t* output_buffer);
+bool processIncomingPacket(const uint8_t* input_buffer, uint8_t* output_buffer_to_forward);
+std::string startProfileServer(int port);
+bool sendFullProfile(const char* target_ip, int port, const char* profile_json);
+}
 
 extern "C" {
-
+// ... keep all the JNIEXPORT functions below this exactly the same ...
 // 1. Gesture JNI functions mapping to com.aegismesh.sensors.GestureDetector
 JNIEXPORT void JNICALL
 Java_com_aegismesh_sensors_GestureDetector_nativeSetScreenHoldState(JNIEnv *env, jobject thiz, jboolean is_held) {

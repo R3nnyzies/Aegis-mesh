@@ -5,37 +5,47 @@ import java.io.Serializable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+/**
+ * Represents a medical facility capable of receiving emergency patients.
+ */
 public class Hospital implements Serializable {
-    private String name;
-    private String inventory;
-    private String distance;
-    private double latitude;
-    private double longitude;
 
-    public Hospital(String name, String inventory, String distance, double latitude, double longitude) {
+    private static final long serialVersionUID = 1L;
+
+    public String name;
+    public String routingReason;
+    public double distanceKm;
+    public String inventory;
+    public double latitude;
+    public double longitude;
+
+    public Hospital() {
+    }
+
+    public Hospital(String name, String inventory, double distanceKm, double latitude, double longitude) {
         this.name = name;
         this.inventory = inventory;
-        this.distance = distance;
+        this.distanceKm = distanceKm;
         this.latitude = latitude;
         this.longitude = longitude;
     }
 
     public String getName() { return name; }
-    public String getDistance() { return distance; }
-    public double getLatitude() { return latitude; }
-    public double getLongitude() { return longitude; }
+    public String getDistance() { return String.format("%.1f km", distanceKm); }
 
     /**
      * Helper to parse the JSON response returned by our FastAPI web scraper.
      */
     public static Hospital fromBackendJson(JSONObject json) throws JSONException {
         JSONObject coords = json.getJSONObject("coordinates");
-        return new Hospital(
+        Hospital h = new Hospital(
                 json.getString("name"),
                 json.getString("inventory"),
-                json.getString("distance"),
+                json.optDouble("distance_km", 0.0),
                 coords.getDouble("lat"),
                 coords.getDouble("lon")
         );
+        h.routingReason = json.optString("routing_reason", "Nearest facility with available inventory");
+        return h;
     }
 }

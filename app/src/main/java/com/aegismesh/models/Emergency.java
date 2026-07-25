@@ -26,6 +26,11 @@ public class Emergency implements Serializable {
     private long timestamp;
     private String status;
 
+    public EmergencyType type = EmergencyType.GENERAL;
+    public int relayHopCount = 0;
+    public boolean locationConfirmed = false;
+    public int approximateRadiusMeters = 0;
+
     public Emergency() {
     }
 
