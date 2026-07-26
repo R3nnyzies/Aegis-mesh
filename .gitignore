@@ -1,7 +1,9 @@
 tree.md
 .vscode
 .venv
-__pycache__
+**/__pycache__/
+*.pyc
+out/
 
 *.iml
 .gradle
