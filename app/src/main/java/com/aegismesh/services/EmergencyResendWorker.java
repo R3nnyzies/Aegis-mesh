@@ -9,6 +9,9 @@ import androidx.work.WorkerParameters;
 
 import com.aegismesh.database.EmergencyDbHelper;
 import com.aegismesh.models.Emergency;
+import com.aegismesh.models.User;
+import com.aegismesh.network.ApiClient;
+import com.aegismesh.session.UserSession;
 
 import androidx.work.ListenableWorker.Result;
 
@@ -38,19 +41,21 @@ public class EmergencyResendWorker extends Worker {
             return Result.success();
         }
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
+        User victim = UserSession.getInstance().getCurrentUser();
+        if (victim == null) {
+            Log.w(TAG, "Found " + unsentList.size() + " queued emergency alert(s), but no User profile "
+                    + "is cached in this process. Keeping them queued until a session-aware retry can send them safely.");
+            return Result.success();
+        }
+
         Log.i(TAG, "Found " + unsentList.size() + " unsent emergency alert(s) in database. Attempting retransmission...");
         boolean allSentSuccessfully = true;
 
         for (Emergency emergency : unsentList) {
             try {
                 Log.d(TAG, "Retransmitting emergency ID: " + emergency.getEmergencyId());
-                // Fetch the saved profile from the device and send it with the emergency for AI Triage
-                com.aegismesh.models.User victim = com.aegismesh.activities.ProfileActivity.getSavedUser(getApplicationContext());
                 ApiClient.sendEmergency(emergency, victim);
-                
+
                 // If transmission succeeds, mark as delivered
                 dbHelper.updateStatus(emergency.getEmergencyId(), Emergency.STATUS_DELIVERED);
                 Log.i(TAG, "Emergency alert " + emergency.getEmergencyId() + " successfully delivered via background worker.");
@@ -64,21 +69,10 @@ public class EmergencyResendWorker extends Worker {
 
         if (allSentSuccessfully) {
             Log.i(TAG, "All local emergency alerts have been successfully synchronized.");
-            return Result.success();
         } else {
             Log.w(TAG, "Some emergency alerts failed to send. Will retry in the next scheduled execution.");
-            // Returning success since the periodic scheduler runs it every 15 minutes.
-            return Result.success();
         }
-=======
->>>>>>> origin/main
-        Log.w(TAG, "Found " + unsentList.size() + " queued emergency alert(s), but the local database "
-                + "does not retain the User profile required for backend delivery. Keeping them queued "
-                + "until a profile-aware SOS request can send them safely.");
+        // Returning success either way since the periodic scheduler runs it every 15 minutes.
         return Result.success();
-<<<<<<< HEAD
-=======
->>>>>>> origin/main
->>>>>>> origin/main
     }
 }

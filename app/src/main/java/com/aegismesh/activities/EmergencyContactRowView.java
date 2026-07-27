@@ -1,37 +1,6 @@
 package com.aegismesh.activities;
 
 import android.content.Context;
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-import android.util.AttributeSet;
-import android.view.View;
-import android.widget.LinearLayout;
-
-import androidx.annotation.Nullable;
-
-public class EmergencyContactRowView extends LinearLayout {
-
-    public static View newInstance(Context context) {
-        return new EmergencyContactRowView(context);
-    }
-
-    public EmergencyContactRowView(Context context) {
-        super(context);
-        init(context);
-    }
-
-    public EmergencyContactRowView(Context context, @Nullable AttributeSet attrs) {
-        super(context, attrs);
-        init(context);
-    }
-
-    private void init(Context context) {
-        // Placeholder implementation
-        setOrientation(HORIZONTAL);
-    }
-=======
->>>>>>> origin/main
 import android.text.InputType;
 import android.view.View;
 import android.view.ViewGroup;
@@ -72,8 +41,4 @@ public class EmergencyContactRowView extends LinearLayout {
     }
     public String getContactName() { return inputName.getText().toString().trim(); }
     public String getContactPhone() { return inputPhone.getText().toString().trim(); }
-<<<<<<< HEAD
-=======
->>>>>>> origin/main
->>>>>>> origin/main
 }

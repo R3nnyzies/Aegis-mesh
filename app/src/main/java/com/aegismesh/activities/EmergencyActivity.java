@@ -3,10 +3,6 @@ package com.aegismesh.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-<<<<<<< HEAD
-=======
-import android.widget.Button;
->>>>>>> origin/main
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -21,7 +17,7 @@ import com.aegismesh.models.Emergency;
 import com.aegismesh.models.Hospital;
 import com.aegismesh.models.Responder;
 import com.aegismesh.models.TriageMessage;
-import com.aegismesh.services.SOSService;
+import com.aegismesh.repository.EmergencyRepository;
 
 import java.util.ArrayList;
 
@@ -30,8 +26,8 @@ import java.util.ArrayList;
  *
  * Shown immediately after an SOS is triggered and stays active for the
  * duration of the incident. It surfaces three concurrent data streams from
- * {@link SOSService}, each backed by a LiveData the service updates as
- * mesh relays, responders, and the AI triage engine report in:
+ * {@link EmergencyRepository}, each backed by a LiveData that SOSService
+ * updates as mesh relays, responders, and the AI triage engine report in:
  *
  *   1. Mesh relay status  - how the alert is propagating peer-to-peer.
  *   2. AI first-aid guidance - step-by-step instructions while help is en route.
@@ -63,6 +59,7 @@ public class EmergencyActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         emergencyId = getIntent().getStringExtra(EXTRA_EMERGENCY_ID);
+
         triageAdapter = new TriageMessageAdapter(new ArrayList<>());
         binding.recyclerTriage.setLayoutManager(new LinearLayoutManager(this));
         binding.recyclerTriage.setAdapter(triageAdapter);
@@ -70,51 +67,19 @@ public class EmergencyActivity extends AppCompatActivity {
         binding.buttonCancelSos.setOnClickListener(v -> confirmCancel());
         binding.buttonEscalate.setOnClickListener(v -> escalate());
 
-<<<<<<< HEAD
         observeActiveEmergency();
     }
 
-=======
-<<<<<<< HEAD
-        // IMPROVED TEST BUTTON FOR EMULATOR - ADDED INSIDE SCROLLVIEW TO AVOID OVERLAYING
-        Button btnForceSos = new Button(this);
-        btnForceSos.setText("FORCE TRIGGER SOS (TEST)");
-        btnForceSos.setBackgroundColor(0xFFFF0000); // Red
-        btnForceSos.setTextColor(0xFFFFFFFF); // White
-        
-        android.widget.LinearLayout.LayoutParams params = new android.widget.LinearLayout.LayoutParams(
-                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
-        params.topMargin = 50;
-        btnForceSos.setLayoutParams(params);
-        
-        btnForceSos.setOnClickListener(v -> {
-            onSosTriggered();
-        });
-        
-        // Add it to the main LinearLayout inside the ScrollView
-        ((android.view.ViewGroup) binding.getRoot().getChildAt(0)).addView(btnForceSos);
-
-=======
->>>>>>> origin/main
-        observeActiveEmergency();
-    }
-
-    private void onSosTriggered() {
-        SOSService.trigger(this);
-    }
-
->>>>>>> origin/main
     private void observeActiveEmergency() {
-        SOSService.getActiveEmergency().observe(this, emergencyObserver);
-        SOSService.getTriageMessages().observe(this, triageObserver);
-        SOSService.getAssignedResponder().observe(this, responderObserver);
-        SOSService.getRecommendedHospital().observe(this, hospitalObserver);
+        EmergencyRepository repository = EmergencyRepository.getInstance();
+        repository.getActiveEmergency().observe(this, emergencyObserver);
+        repository.getTriageMessages().observe(this, triageObserver);
+        repository.getAssignedResponder().observe(this, responderObserver);
+        repository.getRecommendedHospital().observe(this, hospitalObserver);
     }
 
     private void renderEmergency(@Nullable Emergency emergency) {
         if (emergency == null) {
-<<<<<<< HEAD
             // Emergency was resolved or cancelled elsewhere (e.g. another device).
             finish();
             return;
@@ -131,22 +96,6 @@ public class EmergencyActivity extends AppCompatActivity {
                 emergency.locationConfirmed
                         ? getString(R.string.location_shared_exact)
                         : getString(R.string.location_shared_approximate, emergency.approximateRadiusMeters));
-=======
-            // Only finish if we were actually tracking a specific emergency
-            if (emergencyId != null) {
-                finish();
-            }
-            return;
-        }
-
-        binding.textEmergencyType.setText(emergency.getEmergencyType());
-        binding.textMeshRelayStatus.setText("Relayed by mesh"); // Placeholder or use getter if available
-
-        binding.textLocationStatus.setText(
-                emergency.getStatus().equals(Emergency.STATUS_DELIVERED)
-                        ? getString(R.string.location_shared_exact)
-                        : getString(R.string.location_shared_approximate, 100)); // Placeholder radius
->>>>>>> origin/main
     }
 
     private void appendTriageMessage(@Nullable TriageMessage message) {
@@ -162,19 +111,11 @@ public class EmergencyActivity extends AppCompatActivity {
         }
 
         binding.groupResponder.setVisibility(View.VISIBLE);
-<<<<<<< HEAD
         binding.textResponderName.setText(responder.displayName);
         binding.textResponderTrustScore.setText(
                 getString(R.string.responder_trust_score, responder.trustScore, responder.completedAssists));
         binding.textResponderEta.setText(getString(R.string.responder_eta, responder.etaMinutes));
         binding.iconVerifiedBadge.setVisibility(responder.isVerified ? View.VISIBLE : View.GONE);
-=======
-        binding.textResponderName.setText(responder.getName());
-        binding.textResponderTrustScore.setText(
-                getString(R.string.responder_trust_score, responder.getTrustScore(), responder.getAssists()));
-        binding.textResponderEta.setText(getString(R.string.responder_eta, responder.getEtaMinutes()));
-        binding.iconVerifiedBadge.setVisibility(responder.isVerified() ? View.VISIBLE : View.GONE);
->>>>>>> origin/main
     }
 
     private void renderHospital(@Nullable Hospital hospital) {
@@ -184,13 +125,8 @@ public class EmergencyActivity extends AppCompatActivity {
         }
 
         binding.groupHospital.setVisibility(View.VISIBLE);
-<<<<<<< HEAD
         binding.textHospitalName.setText(hospital.name);
-        binding.textHospitalReason.setText(hospital.routingReason);
-=======
-        binding.textHospitalName.setText(hospital.getName());
         binding.textHospitalReason.setText(hospital.routingReason != null ? hospital.routingReason : "Recommended Facility");
->>>>>>> origin/main
         binding.textHospitalDistance.setText(getString(R.string.hospital_distance_km, hospital.distanceKm));
     }
 
@@ -205,7 +141,7 @@ public class EmergencyActivity extends AppCompatActivity {
 
     private void cancelSos() {
         if (emergencyId != null) {
-            SOSService.cancel(this, emergencyId);
+            EmergencyRepository.getInstance().cancel(this, emergencyId);
         }
         finish();
     }
@@ -215,7 +151,7 @@ public class EmergencyActivity extends AppCompatActivity {
         // services, and begins continuous GPS tracking - see
         // "Automatic Escalation" in the security proposal.
         if (emergencyId != null) {
-            SOSService.escalate(this, emergencyId);
+            EmergencyRepository.getInstance().escalate(this, emergencyId);
         }
     }
 

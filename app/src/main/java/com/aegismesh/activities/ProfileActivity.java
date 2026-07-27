@@ -34,14 +34,6 @@ public class ProfileActivity extends AppCompatActivity {
 
     public static final String EXTRA_ONBOARDING = "extra_onboarding";
 
-<<<<<<< HEAD
-=======
-    public static User getSavedUser(android.content.Context context) {
-        // Mock implementation
-        return new User("Unknown Victim", "0", "", "");
-    }
-
->>>>>>> origin/main
     private ActivityProfileBinding binding;
     private boolean isOnboarding;
 

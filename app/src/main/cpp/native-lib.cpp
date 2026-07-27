@@ -3,33 +3,10 @@
 #include "ble_mesh.h"
 #include "wifi_direct.h"
 
-<<<<<<< HEAD
 extern void setScreenHoldState(bool isHeld);
 extern bool processAccelerometerData(float x, float y, float z);
 
 extern "C" {
-
-=======
-<<<<<<< HEAD
-// C++ functions (from gesture_processing.cpp - these are scrambled)
-extern void setScreenHoldState(bool isHeld);
-extern bool processAccelerometerData(float x, float y, float z);
-
-// C functions (from ble_mesh.cpp and wifi_direct.cpp - these are NOT scrambled)
-extern "C" {
-void buildSosPacket(uint32_t msg_id, const char* name, const char* condition, uint8_t* output_buffer);
-bool processIncomingPacket(const uint8_t* input_buffer, uint8_t* output_buffer_to_forward);
-std::string startProfileServer(int port);
-bool sendFullProfile(const char* target_ip, int port, const char* profile_json);
-}
-=======
-extern void setScreenHoldState(bool isHeld);
-extern bool processAccelerometerData(float x, float y, float z);
->>>>>>> origin/main
-
-extern "C" {
-// ... keep all the JNIEXPORT functions below this exactly the same ...
->>>>>>> origin/main
 // 1. Gesture JNI functions mapping to com.aegismesh.sensors.GestureDetector
 JNIEXPORT void JNICALL
 Java_com_aegismesh_sensors_GestureDetector_nativeSetScreenHoldState(JNIEnv *env, jobject thiz, jboolean is_held) {
@@ -46,13 +23,13 @@ JNIEXPORT jbyteArray JNICALL
 Java_com_aegismesh_services_MeshService_nativeBuildSosPacket(JNIEnv *env, jobject thiz, jint msg_id, jstring name, jstring condition) {
     const char *c_name = env->GetStringUTFChars(name, nullptr);
     const char *c_condition = env->GetStringUTFChars(condition, nullptr);
-    
+
     uint8_t buffer[31] = {0};
     buildSosPacket(msg_id, c_name, c_condition, buffer);
-    
+
     env->ReleaseStringUTFChars(name, c_name);
     env->ReleaseStringUTFChars(condition, c_condition);
-    
+
     jbyteArray result = env->NewByteArray(31);
     env->SetByteArrayRegion(result, 0, 31, reinterpret_cast<jbyte *>(buffer));
     return result;
@@ -71,7 +48,7 @@ Java_com_aegismesh_services_MeshService_nativeProcessIncomingPacket(JNIEnv *env,
         env->SetByteArrayRegion(result, 0, 31, reinterpret_cast<jbyte *>(output_buffer));
         return result; // Return payload to Java to broadcast
     }
-    
+
     return nullptr; // Null means do not broadcast
 }
 

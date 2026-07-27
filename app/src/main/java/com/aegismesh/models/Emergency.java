@@ -26,24 +26,11 @@ public class Emergency implements Serializable {
     private long timestamp;
     private String status;
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-    public EmergencyType type = EmergencyType.GENERAL;
-    public int relayHopCount = 0;
-    public boolean locationConfirmed = false;
-    public int approximateRadiusMeters = 0;
-=======
->>>>>>> origin/main
     // UI/Routing fields
     public EmergencyType type;
     public int relayHopCount = 0;
     public boolean locationConfirmed = false;
     public int approximateRadiusMeters = 100;
-<<<<<<< HEAD
-=======
->>>>>>> origin/main
->>>>>>> origin/main
 
     public Emergency() {
         this.type = EmergencyType.GENERAL;
