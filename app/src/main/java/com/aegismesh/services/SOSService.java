@@ -19,6 +19,11 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
+<<<<<<< HEAD
+=======
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+>>>>>>> origin/main
 import androidx.work.Constraints;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.NetworkType;
@@ -31,12 +36,22 @@ import androidx.lifecycle.MutableLiveData;
 import com.aegismesh.database.EmergencyDbHelper;
 import com.aegismesh.models.DispatchResult;
 import com.aegismesh.models.Emergency;
+<<<<<<< HEAD
+=======
+import com.aegismesh.models.Hospital;
+import com.aegismesh.models.Responder;
+import com.aegismesh.models.TriageMessage;
+>>>>>>> origin/main
 import com.aegismesh.models.User;
 import com.aegismesh.models.Hospital;
 import com.aegismesh.models.Responder;
 import com.aegismesh.models.TriageMessage;
 import com.aegismesh.network.ApiClient;
+<<<<<<< HEAD
 import com.aegismesh.session.UserSession;
+=======
+//import com.aegismesh.session.UserSession;
+>>>>>>> origin/main
 
 import java.util.List;
 import java.util.UUID;
@@ -123,6 +138,19 @@ public class SOSService extends Service {
     public static final String FALL_TRIGGER = "FALL_TRIGGER";
     public static final String VOICE_TRIGGER = "VOICE_TRIGGER";
 
+<<<<<<< HEAD
+=======
+    public static void trigger(Context context) {
+        Intent intent = new Intent(context, SOSService.class);
+        intent.setAction(ACTION_TRIGGER_SOS);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(intent);
+        } else {
+            context.startService(intent);
+        }
+    }
+
+>>>>>>> origin/main
     private static final String CHANNEL_ID = "SOS_SERVICE_CHANNEL";
     private static final int NOTIFICATION_ID = 911;
     private static final int RETRY_MAX_ATTEMPTS = 3;
@@ -132,6 +160,20 @@ public class SOSService extends Service {
     private final Object locationLock = new Object();
     private final Object meshLock = new Object();
 
+<<<<<<< HEAD
+=======
+    // LiveData for UI observation
+    private static final MutableLiveData<Emergency> activeEmergency = new MutableLiveData<>();
+    private static final MutableLiveData<TriageMessage> triageMessages = new MutableLiveData<>();
+    private static final MutableLiveData<Responder> assignedResponder = new MutableLiveData<>();
+    private static final MutableLiveData<Hospital> recommendedHospital = new MutableLiveData<>();
+
+    public static LiveData<Emergency> getActiveEmergency() { return activeEmergency; }
+    public static LiveData<TriageMessage> getTriageMessages() { return triageMessages; }
+    public static LiveData<Responder> getAssignedResponder() { return assignedResponder; }
+    public static LiveData<Hospital> getRecommendedHospital() { return recommendedHospital; }
+
+>>>>>>> origin/main
     // Services connection state
     private LocationService locationService;
     private boolean isLocationServiceBound = false;
@@ -182,6 +224,20 @@ public class SOSService extends Service {
         }
     };
 
+<<<<<<< HEAD
+=======
+    public static void cancel(Context context, String emergencyId) {
+        Log.i(TAG, "Cancelling SOS: " + emergencyId);
+        activeEmergency.postValue(null);
+        // Add actual cancellation logic here
+    }
+
+    public static void escalate(Context context, String emergencyId) {
+        Log.i(TAG, "Escalating SOS: " + emergencyId);
+        // Add actual escalation logic here
+    }
+
+>>>>>>> origin/main
     @Override
     public void onCreate() {
         super.onCreate();
@@ -337,7 +393,13 @@ public class SOSService extends Service {
 
         // Resolve the logged-in victim's profile from the cached session.
         // The backend payload (toBackendJsonString) requires this to embed medical/profile data.
+<<<<<<< HEAD
         User victim = UserSession.getInstance().getCurrentUser();
+=======
+
+        // just this function below
+        User victim = com.aegismesh.activities.ProfileActivity.getSavedUser(this);
+>>>>>>> origin/main
         if (victim == null) {
             Log.w(TAG, "No cached User found in UserSession; backend payload will be incomplete.");
         }
@@ -538,7 +600,11 @@ public class SOSService extends Service {
                     return;
                 }
 
+<<<<<<< HEAD
                 User victim = UserSession.getInstance().getCurrentUser();
+=======
+                User victim = com.aegismesh.activities.ProfileActivity.getSavedUser(SOSService.this);
+>>>>>>> origin/main
                 if (victim == null) {
                     Log.w(TAG, "No cached User found in UserSession; skipping resend until session is restored.");
                     return;
@@ -651,9 +717,15 @@ public class SOSService extends Service {
 
     private void updateNotification(String title, String content) {
         NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+<<<<<<< HEAD
         if (manager != null) {
             manager.notify(NOTIFICATION_ID, buildNotification(title, content));
         }
+=======
+//        if (manager != null) {
+//            manager.notify(NOTIFICATION_ID, buildNotification(title, content));
+//        }
+>>>>>>> origin/main
     }
 
     // --- Input Sanitation & Validation Helpers ---

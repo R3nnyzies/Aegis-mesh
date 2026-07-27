@@ -5,6 +5,10 @@ import android.util.Log;
 import com.aegismesh.models.DispatchResult;
 import com.aegismesh.models.Emergency;
 import com.aegismesh.models.Hospital;
+<<<<<<< HEAD
+=======
+import com.aegismesh.models.MedicalProfile;
+>>>>>>> origin/main
 import com.aegismesh.models.User;
 
 import org.json.JSONObject;
@@ -68,6 +72,51 @@ public final class ApiClient {
         return sessionToken;
     }
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+    public static UserService getUserService() {
+        return new UserService() {
+            @Override
+            public void getCurrentUser(ApiCallback<User> callback) {
+                // Mock implementation for now to fix build errors
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(1000);
+                        callback.onSuccess(new User("John Doe", "30", "Peanuts", "Asthma"));
+                    } catch (InterruptedException e) {
+                        callback.onError(e);
+                    }
+                }).start();
+            }
+
+            @Override
+            public void updateProfile(String fullName, MedicalProfile profile, ApiCallback<User> callback) {
+                // Mock implementation for now to fix build errors
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(1000);
+                        String allergiesCsv = profile.allergies != null ? android.text.TextUtils.join(",", profile.allergies) : "";
+                        String chronicCsv = profile.chronicIllnesses != null ? android.text.TextUtils.join(",", profile.chronicIllnesses) : "";
+                        User user = new User(fullName, "30", allergiesCsv, chronicCsv);
+                        user.medicalProfile = profile;
+                        callback.onSuccess(user);
+                    } catch (InterruptedException e) {
+                        callback.onError(e);
+                    }
+                }).start();
+            }
+        };
+    }
+
+    /**
+     * Resolves the BASE_URL dynamically via reflection from BuildConfig.
+     * Fallback to default emulator IP (10.0.2.2) if not defined or
+     * ifBuildConfig is missing at compile time.
+     */
+=======
+>>>>>>> origin/main
+>>>>>>> origin/main
     private static String getBaseUrl() {
         try {
             Class<?> clazz = Class.forName("com.aegismesh.BuildConfig");

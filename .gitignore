@@ -1,8 +1,11 @@
+<<<<<<< HEAD
 tree.md
 .vscode
 .venv
 __pycache__
 
+=======
+>>>>>>> origin/main
 *.iml
 .gradle
 /local.properties

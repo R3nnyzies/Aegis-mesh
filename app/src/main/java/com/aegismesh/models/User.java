@@ -1,24 +1,52 @@
 package com.aegismesh.models;
 
 import java.io.Serializable;
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public class User implements Serializable {
 
+<<<<<<< HEAD
     private String fullName;
+=======
+    public String fullName;
+    public MedicalProfile medicalProfile;
+    public VerificationLevel verificationLevel;
+
+    // Keep old fields for backward compatibility if needed, 
+    // but ProfileActivity seems to use medicalProfile.
+>>>>>>> origin/main
     private String age;
     private String allergies;
     private String chronicConditions;
     private MedicalProfile medicalProfile;
     private VerificationLevel verificationLevel;
 
+<<<<<<< HEAD
+=======
+    public User() {
+        this.medicalProfile = new MedicalProfile();
+        this.verificationLevel = new VerificationLevel();
+    }
+
+>>>>>>> origin/main
     public User(String fullName, String age, String allergies, String chronicConditions) {
         this.fullName = fullName;
         this.age = age;
         this.allergies = allergies;
         this.chronicConditions = chronicConditions;
+<<<<<<< HEAD
+=======
+        this.medicalProfile = new MedicalProfile("", 
+            allergies != null ? allergies.split(",") : new String[0], 
+            chronicConditions != null ? chronicConditions.split(",") : new String[0], 
+            new String[0]);
+        this.verificationLevel = new VerificationLevel();
+>>>>>>> origin/main
     }
 
     public String getFullName() {
@@ -41,6 +69,11 @@ public class User implements Serializable {
         return chronicConditions;
     }
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/main
     public MedicalProfile getMedicalProfile() {
         return medicalProfile;
     }
@@ -65,6 +98,10 @@ public class User implements Serializable {
      * profiles (e.g. a user who triggers SOS before finishing onboarding) to
      * send a payload missing required backend fields.
      */
+<<<<<<< HEAD
+=======
+>>>>>>> origin/main
+>>>>>>> origin/main
     public JSONObject toProfileJsonObject() throws JSONException {
         JSONObject profileJson = new JSONObject();
         profileJson.put("age", age != null ? age : "");
