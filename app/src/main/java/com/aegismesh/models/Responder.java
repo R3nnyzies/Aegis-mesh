@@ -26,4 +26,10 @@ public class Responder implements Serializable {
         this.etaMinutes = etaMinutes;
         this.isVerified = isVerified;
     }
+
+    public String getName() { return displayName; }
+    public int getTrustScore() { return trustScore; }
+    public int getAssists() { return completedAssists; }
+    public int getEtaMinutes() { return etaMinutes; }
+    public boolean isVerified() { return isVerified; }
 }

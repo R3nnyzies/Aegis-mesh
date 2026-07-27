@@ -67,23 +67,24 @@ public class EmergencyActivity extends AppCompatActivity {
         binding.buttonCancelSos.setOnClickListener(v -> confirmCancel());
         binding.buttonEscalate.setOnClickListener(v -> escalate());
 
-        // IMPROVED TEST BUTTON FOR EMULATOR
-        android.widget.FrameLayout container = new android.widget.FrameLayout(this);
-        container.setLayoutParams(new android.widget.FrameLayout.LayoutParams(
-                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
-                android.view.Gravity.BOTTOM));
-        container.setPadding(32, 32, 32, 100); // Pad from bottom
-
+        // IMPROVED TEST BUTTON FOR EMULATOR - ADDED INSIDE SCROLLVIEW TO AVOID OVERLAYING
         Button btnForceSos = new Button(this);
         btnForceSos.setText("FORCE TRIGGER SOS (TEST)");
         btnForceSos.setBackgroundColor(0xFFFF0000); // Red
         btnForceSos.setTextColor(0xFFFFFFFF); // White
+        
+        android.widget.LinearLayout.LayoutParams params = new android.widget.LinearLayout.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.topMargin = 50;
+        btnForceSos.setLayoutParams(params);
+        
         btnForceSos.setOnClickListener(v -> {
             onSosTriggered();
         });
-        container.addView(btnForceSos);
-        ((android.view.ViewGroup) findViewById(android.R.id.content)).addView(container);
+        
+        // Add it to the main LinearLayout inside the ScrollView
+        ((android.view.ViewGroup) binding.getRoot().getChildAt(0)).addView(btnForceSos);
 
         observeActiveEmergency();
     }
