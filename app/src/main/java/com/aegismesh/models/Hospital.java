@@ -9,6 +9,19 @@ import org.json.JSONObject;
  * Represents a medical facility capable of receiving emergency patients.
  */
 public class Hospital implements Serializable {
+<<<<<<< HEAD
+=======
+    private static final long serialVersionUID = 1L;
+
+    public String name;
+    public String inventory;
+    public String distance;
+    public double latitude;
+    public double longitude;
+    
+    public String routingReason = "Specialized trauma care unit";
+    public double distanceKm = 0.0;
+>>>>>>> origin/main
 
     private static final long serialVersionUID = 1L;
 
@@ -28,6 +41,13 @@ public class Hospital implements Serializable {
         this.distanceKm = distanceKm;
         this.latitude = latitude;
         this.longitude = longitude;
+        
+        try {
+            String clean = distance.replaceAll("[^0-9.]", "");
+            this.distanceKm = Double.parseDouble(clean);
+        } catch (Exception e) {
+            this.distanceKm = 0.0;
+        }
     }
 
     public String getName() { return name; }

@@ -67,6 +67,7 @@ public class EmergencyActivity extends AppCompatActivity {
         binding.buttonCancelSos.setOnClickListener(v -> confirmCancel());
         binding.buttonEscalate.setOnClickListener(v -> escalate());
 
+<<<<<<< HEAD
         // IMPROVED TEST BUTTON FOR EMULATOR - ADDED INSIDE SCROLLVIEW TO AVOID OVERLAYING
         Button btnForceSos = new Button(this);
         btnForceSos.setText("FORCE TRIGGER SOS (TEST)");
@@ -86,6 +87,8 @@ public class EmergencyActivity extends AppCompatActivity {
         // Add it to the main LinearLayout inside the ScrollView
         ((android.view.ViewGroup) binding.getRoot().getChildAt(0)).addView(btnForceSos);
 
+=======
+>>>>>>> origin/main
         observeActiveEmergency();
     }
 

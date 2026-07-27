@@ -1,6 +1,9 @@
 #include <jni.h>
 #include <string>
+#include "ble_mesh.h"
+#include "wifi_direct.h"
 
+<<<<<<< HEAD
 // C++ functions (from gesture_processing.cpp - these are scrambled)
 extern void setScreenHoldState(bool isHeld);
 extern bool processAccelerometerData(float x, float y, float z);
@@ -12,6 +15,10 @@ bool processIncomingPacket(const uint8_t* input_buffer, uint8_t* output_buffer_t
 std::string startProfileServer(int port);
 bool sendFullProfile(const char* target_ip, int port, const char* profile_json);
 }
+=======
+extern void setScreenHoldState(bool isHeld);
+extern bool processAccelerometerData(float x, float y, float z);
+>>>>>>> origin/main
 
 extern "C" {
 // ... keep all the JNIEXPORT functions below this exactly the same ...
@@ -59,11 +66,6 @@ Java_com_aegismesh_services_MeshService_nativeProcessIncomingPacket(JNIEnv *env,
     
     return nullptr; // Null means do not broadcast
 }
-
-// Declare the functions from wifi_direct.cpp
-extern std::string startProfileServer(int port);
-extern bool sendFullProfile(const char* target_ip, int port, const char* profile_json);
-
 
 // 3. Wi-Fi Direct JNI functions mapping to com.aegismesh.services.MeshService
 JNIEXPORT jstring JNICALL

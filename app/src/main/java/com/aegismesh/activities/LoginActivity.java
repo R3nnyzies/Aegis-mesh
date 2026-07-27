@@ -184,9 +184,29 @@ public class LoginActivity extends AppCompatActivity {
             String user = binding.etUsername.getText().toString();
             String pass = binding.etPassword.getText().toString();
 
+<<<<<<< HEAD
             if (user.isEmpty() || pass.isEmpty()) {
                 Toast.makeText(this, "Enter credentials", Toast.LENGTH_SHORT).show();
                 return;
+=======
+    private void requestOtp() {
+        String phoneNumber = textOf(binding.inputPhoneNumber);
+        if (!isValidPhoneNumber(phoneNumber)) {
+            binding.inputPhoneNumber.setError(getString(R.string.error_invalid_phone));
+            return;
+        }
+
+        setLoading(true);
+        ApiClient.getAuthService().requestOtp(phoneNumber, new ApiCallback<AuthResult.OtpRequest>() {
+            @Override
+            public void onSuccess(AuthResult.OtpRequest response) {
+                runOnUiThread(() -> {
+                    setLoading(false);
+                    otpRequestId = response.getRequestId();
+                    binding.otpGroup.setVisibility(View.VISIBLE);
+                    binding.textStatus.setText(getString(R.string.otp_sent, phoneNumber));
+                });
+>>>>>>> origin/main
             }
 
             binding.progressBar.setVisibility(View.VISIBLE);
@@ -199,4 +219,74 @@ public class LoginActivity extends AppCompatActivity {
             finish();
         });
     }
+<<<<<<< HEAD
 }
+=======
+
+    private void verifyOtp() {
+        if (otpRequestId == null) {
+            showError(getString(R.string.error_request_otp_first));
+            return;
+        }
+
+        String code = textOf(binding.inputOtpCode);
+        if (code.length() != OTP_LENGTH) {
+            binding.inputOtpCode.setError(getString(R.string.error_invalid_otp));
+            return;
+        }
+
+        setLoading(true);
+        ApiClient.getAuthService().verifyOtp(otpRequestId, code, new ApiCallback<AuthResult>() {
+            @Override
+            public void onSuccess(AuthResult auth) {
+                runOnUiThread(() -> {
+                    setLoading(false);
+                    ApiClient.setSessionToken(auth.getAccessToken());
+                    onAuthenticated(auth.isNewUser());
+                });
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                runOnUiThread(() -> {
+                    setLoading(false);
+                    showError(messageOrDefault(error, R.string.error_otp_invalid));
+                });
+            }
+        });
+    }
+
+    private void onAuthenticated(boolean isNewUser) {
+        Class<?> destination = isNewUser ? ProfileActivity.class : HomeActivity.class;
+        Intent intent = new Intent(this, destination);
+        if (isNewUser) {
+            intent.putExtra(ProfileActivity.EXTRA_ONBOARDING, true);
+        }
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
+
+    private boolean isValidPhoneNumber(String phoneNumber) {
+        return PHONE_PATTERN.matcher(phoneNumber).matches();
+    }
+
+    private String textOf(android.widget.EditText field) {
+        return field.getText() == null ? "" : field.getText().toString().trim();
+    }
+
+    private String messageOrDefault(Throwable error, int defaultResId) {
+        return !TextUtils.isEmpty(error.getMessage()) ? error.getMessage() : getString(defaultResId);
+    }
+
+    private void setLoading(boolean loading) {
+        binding.progressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
+        binding.buttonSendOtp.setEnabled(!loading);
+        binding.buttonVerifyOtp.setEnabled(!loading);
+    }
+
+    private void showError(String message) {
+        binding.textStatus.setText(message);
+    }
+}
+>>>>>>> origin/main

@@ -9,7 +9,6 @@ import androidx.work.WorkerParameters;
 
 import com.aegismesh.database.EmergencyDbHelper;
 import com.aegismesh.models.Emergency;
-import com.aegismesh.network.ApiClient;
 
 import androidx.work.ListenableWorker.Result;
 
@@ -39,6 +38,7 @@ public class EmergencyResendWorker extends Worker {
             return Result.success();
         }
 
+<<<<<<< HEAD
         Log.i(TAG, "Found " + unsentList.size() + " unsent emergency alert(s) in database. Attempting retransmission...");
         boolean allSentSuccessfully = true;
 
@@ -68,5 +68,11 @@ public class EmergencyResendWorker extends Worker {
             // Returning success since the periodic scheduler runs it every 15 minutes.
             return Result.success();
         }
+=======
+        Log.w(TAG, "Found " + unsentList.size() + " queued emergency alert(s), but the local database "
+                + "does not retain the User profile required for backend delivery. Keeping them queued "
+                + "until a profile-aware SOS request can send them safely.");
+        return Result.success();
+>>>>>>> origin/main
     }
 }

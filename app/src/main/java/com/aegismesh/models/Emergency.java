@@ -26,12 +26,21 @@ public class Emergency implements Serializable {
     private long timestamp;
     private String status;
 
+<<<<<<< HEAD
     public EmergencyType type = EmergencyType.GENERAL;
     public int relayHopCount = 0;
     public boolean locationConfirmed = false;
     public int approximateRadiusMeters = 0;
+=======
+    // UI/Routing fields
+    public EmergencyType type;
+    public int relayHopCount = 0;
+    public boolean locationConfirmed = false;
+    public int approximateRadiusMeters = 100;
+>>>>>>> origin/main
 
     public Emergency() {
+        this.type = EmergencyType.GENERAL;
     }
 
     public Emergency(String emergencyId, String userId, String triggerType, String emergencyType,
@@ -44,6 +53,16 @@ public class Emergency implements Serializable {
         this.longitude = longitude;
         this.timestamp = timestamp;
         this.status = status;
+        this.type = resolveType(emergencyType);
+    }
+
+    private EmergencyType resolveType(String emergencyType) {
+        if (emergencyType == null) return EmergencyType.GENERAL;
+        try {
+            return EmergencyType.valueOf(emergencyType.toUpperCase());
+        } catch (Exception e) {
+            return EmergencyType.GENERAL;
+        }
     }
 
     // Getters and Setters
@@ -77,6 +96,7 @@ public class Emergency implements Serializable {
 
     public void setEmergencyType(String emergencyType) {
         this.emergencyType = emergencyType;
+        this.type = resolveType(emergencyType);
     }
 
     public double getLatitude() {
