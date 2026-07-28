@@ -42,14 +42,6 @@ android {
             path = file("src/main/cpp/CMakeLists.txt")
         }
     }
-<<<<<<< HEAD
-=======
-
-    buildFeatures {
-        viewBinding = true
-        dataBinding = true
-    }
->>>>>>> origin/main
 }
 
 dependencies {
@@ -71,18 +63,4 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
-<<<<<<< HEAD
 }
-=======
-<<<<<<< HEAD
-
-
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.11.0")
-    implementation("androidx.work:work-runtime:2.9.0")
-
-}
-=======
-}
->>>>>>> origin/main
->>>>>>> origin/main

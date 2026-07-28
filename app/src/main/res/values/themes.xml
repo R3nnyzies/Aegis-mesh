@@ -1,6 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-<<<<<<< HEAD
 
     <style name="Theme.AegisMesh" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="colorPrimary">@color/aegis_primary</item>
@@ -8,11 +7,4 @@
         <item name="colorAccent">@color/aegis_accent</item>
     </style>
 
-=======
-    <style name="Theme.AegisMesh" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:colorPrimary">@color/aegis_primary</item>
-        <item name="android:colorPrimaryDark">@color/aegis_primary_dark</item>
-        <item name="android:colorAccent">@color/aegis_accent</item>
-    </style>
->>>>>>> origin/main
 </resources>

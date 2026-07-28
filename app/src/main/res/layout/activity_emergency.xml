@@ -1,51 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
-=======
->>>>>>> origin/main
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#1A0000"
     android:fillViewport="true">
-<<<<<<< HEAD
-=======
->>>>>>> origin/main
->>>>>>> origin/main
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-        android:padding="24dp">
-
-        <TextView
-            android:id="@+id/textEmergencyType"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="#FF0000"
-            android:gravity="center"
-            android:layout_marginBottom="8dp"/>
-
-        <TextView
-            android:id="@+id/textMeshRelayStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:layout_marginBottom="4dp"/>
-
-=======
->>>>>>> origin/main
         android:padding="16dp">
 
         <!-- ── Header ─────────────────────────────────────── -->
@@ -88,28 +53,10 @@
             android:layout_marginBottom="4dp"
             tools:text="Relayed via 3 peers" />
 
-<<<<<<< HEAD
-=======
->>>>>>> origin/main
->>>>>>> origin/main
         <TextView
             android:id="@+id/textLocationStatus"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-            android:gravity="center"
-            android:layout_marginBottom="16dp"/>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="First Aid Instructions"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp"/>
-=======
->>>>>>> origin/main
             android:textColor="#AAAAAA"
             android:textSize="13sp"
             android:layout_marginBottom="16dp"
@@ -125,49 +72,22 @@
             android:textStyle="bold"
             android:letterSpacing="0.1"
             android:layout_marginBottom="8dp" />
-<<<<<<< HEAD
-=======
->>>>>>> origin/main
->>>>>>> origin/main
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerTriage"
             android:layout_width="match_parent"
             android:layout_height="200dp"
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-            android:background="#F0F0F0"
-            android:layout_marginBottom="24dp"/>
-
-        <!-- Responder Info -->
-=======
->>>>>>> origin/main
             android:background="#22FFFFFF"
             android:paddingHorizontal="8dp"
             android:paddingVertical="8dp"
             tools:listitem="@android:layout/simple_list_item_1" />
 
         <!-- ── Responder card (hidden until assigned) ─────── -->
-<<<<<<< HEAD
-=======
->>>>>>> origin/main
->>>>>>> origin/main
         <LinearLayout
             android:id="@+id/groupResponder"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-            android:background="#E8F5E9"
-            android:padding="12dp"
-            android:layout_marginBottom="16dp"
-            android:visibility="gone">
-
-=======
->>>>>>> origin/main
             android:background="#22FFFFFF"
             android:padding="12dp"
             android:layout_marginTop="16dp"
@@ -183,10 +103,6 @@
                 android:letterSpacing="0.1"
                 android:layout_marginBottom="8dp" />
 
-<<<<<<< HEAD
-=======
->>>>>>> origin/main
->>>>>>> origin/main
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -195,15 +111,6 @@
 
                 <TextView
                     android:id="@+id/textResponderName"
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textStyle="bold"
-                    android:textSize="18sp"/>
-=======
->>>>>>> origin/main
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -211,66 +118,30 @@
                     android:textSize="17sp"
                     android:textStyle="bold"
                     tools:text="John Doe" />
-<<<<<<< HEAD
-=======
->>>>>>> origin/main
->>>>>>> origin/main
 
                 <ImageView
                     android:id="@+id/iconVerifiedBadge"
                     android:layout_width="20dp"
                     android:layout_height="20dp"
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-                    android:layout_marginStart="8dp"
-                    android:src="@android:drawable/ic_dialog_info"
-                    android:visibility="gone"/>
-=======
->>>>>>> origin/main
                     android:src="@android:drawable/btn_star_big_on"
                     android:tint="#44DD88"
                     android:visibility="gone"
                     android:contentDescription="Verified responder" />
-<<<<<<< HEAD
-=======
->>>>>>> origin/main
->>>>>>> origin/main
             </LinearLayout>
 
             <TextView
                 android:id="@+id/textResponderTrustScore"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-                android:textSize="12sp"/>
-=======
->>>>>>> origin/main
                 android:textColor="#AAAAAA"
                 android:textSize="13sp"
                 android:layout_marginTop="4dp"
                 tools:text="Trust score: 4.8 • 32 completed assists" />
-<<<<<<< HEAD
-=======
->>>>>>> origin/main
->>>>>>> origin/main
 
             <TextView
                 android:id="@+id/textResponderEta"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-                android:textStyle="bold"
-                android:textColor="#2E7D32"/>
-        </LinearLayout>
-
-        <!-- Hospital Info -->
-=======
->>>>>>> origin/main
                 android:textColor="#FF8800"
                 android:textSize="15sp"
                 android:textStyle="bold"
@@ -279,31 +150,11 @@
         </LinearLayout>
 
         <!-- ── Hospital card (hidden until routed) ────────── -->
-<<<<<<< HEAD
-=======
->>>>>>> origin/main
->>>>>>> origin/main
         <LinearLayout
             android:id="@+id/groupHospital"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-            android:background="#E3F2FD"
-            android:padding="12dp"
-            android:layout_marginBottom="24dp"
-            android:visibility="gone">
-
-            <TextView
-                android:id="@+id/textHospitalName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textStyle="bold"
-                android:textSize="18sp"/>
-=======
->>>>>>> origin/main
             android:background="#22FFFFFF"
             android:padding="12dp"
             android:layout_marginTop="12dp"
@@ -327,49 +178,20 @@
                 android:textSize="17sp"
                 android:textStyle="bold"
                 tools:text="City General Hospital" />
-<<<<<<< HEAD
-=======
->>>>>>> origin/main
->>>>>>> origin/main
 
             <TextView
                 android:id="@+id/textHospitalReason"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-                android:textSize="14sp"/>
-=======
->>>>>>> origin/main
                 android:textColor="#AAAAAA"
                 android:textSize="13sp"
                 android:layout_marginTop="4dp"
                 tools:text="Nearest trauma center with cardiac unit" />
-<<<<<<< HEAD
-=======
->>>>>>> origin/main
->>>>>>> origin/main
 
             <TextView
                 android:id="@+id/textHospitalDistance"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-                android:textStyle="italic"/>
-        </LinearLayout>
-
-        <Button
-            android:id="@+id/buttonEscalate"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="ESCALATE"
-            android:backgroundTint="#FF9800"
-            android:layout_marginBottom="8dp"/>
-=======
->>>>>>> origin/main
                 android:textColor="#4488FF"
                 android:textSize="14sp"
                 android:layout_marginTop="4dp"
@@ -392,34 +214,15 @@
             android:textStyle="bold"
             android:layout_marginTop="24dp"
             android:layout_marginBottom="12dp" />
-<<<<<<< HEAD
-=======
->>>>>>> origin/main
->>>>>>> origin/main
 
         <Button
             android:id="@+id/buttonCancelSos"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-            android:text="CANCEL SOS"
-            style="@style/Widget.MaterialComponents.Button.TextButton"/>
-
-    </LinearLayout>
-</ScrollView>
-=======
->>>>>>> origin/main
             android:text="Cancel SOS"
             android:textColor="#AAAAAA"
             style="?android:attr/buttonBarButtonStyle"
             android:layout_marginBottom="16dp" />
 
     </LinearLayout>
-<<<<<<< HEAD
 </ScrollView>
-=======
-</ScrollView>
->>>>>>> origin/main
->>>>>>> origin/main

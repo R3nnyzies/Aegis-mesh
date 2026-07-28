@@ -7,88 +7,39 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-<<<<<<< HEAD
         android:padding="24dp">
-=======
-<<<<<<< HEAD
-        android:padding="16dp">
-=======
-        android:padding="24dp">
->>>>>>> origin/main
->>>>>>> origin/main
 
         <EditText
             android:id="@+id/inputFullName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-<<<<<<< HEAD
             android:hint="Full name" />
-=======
-<<<<<<< HEAD
-            android:hint="Full Name" />
-=======
-            android:hint="Full name" />
->>>>>>> origin/main
->>>>>>> origin/main
 
         <EditText
             android:id="@+id/inputBloodGroup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-<<<<<<< HEAD
             android:hint="Blood group"
             android:layout_marginTop="8dp" />
-=======
-<<<<<<< HEAD
-            android:hint="Blood Group" />
-=======
-            android:hint="Blood group"
-            android:layout_marginTop="8dp" />
->>>>>>> origin/main
->>>>>>> origin/main
 
         <EditText
             android:id="@+id/inputAllergies"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-<<<<<<< HEAD
             android:hint="Allergies (comma-separated)"
             android:layout_marginTop="8dp" />
-=======
-<<<<<<< HEAD
-            android:hint="Allergies (comma separated)" />
-=======
-            android:hint="Allergies (comma-separated)"
-            android:layout_marginTop="8dp" />
->>>>>>> origin/main
->>>>>>> origin/main
 
         <EditText
             android:id="@+id/inputChronicIllnesses"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-<<<<<<< HEAD
             android:hint="Chronic illnesses (comma-separated)"
             android:layout_marginTop="8dp" />
-=======
-<<<<<<< HEAD
-            android:hint="Chronic Illnesses (comma separated)" />
-=======
-            android:hint="Chronic illnesses (comma-separated)"
-            android:layout_marginTop="8dp" />
->>>>>>> origin/main
->>>>>>> origin/main
 
         <EditText
             android:id="@+id/inputMedications"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-            android:hint="Medications (comma separated)" />
-=======
->>>>>>> origin/main
             android:hint="Current medications (comma-separated)"
             android:layout_marginTop="8dp" />
 
@@ -110,7 +61,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Phone \u2713"
+                android:text="Phone ✓"
                 android:gravity="center" />
 
             <TextView
@@ -118,7 +69,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="ID \u2713"
+                android:text="ID ✓"
                 android:gravity="center"
                 android:visibility="gone" />
 
@@ -127,86 +78,29 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Face \u2713"
+                android:text="Face ✓"
                 android:gravity="center"
                 android:visibility="gone" />
         </LinearLayout>
-<<<<<<< HEAD
-=======
->>>>>>> origin/main
->>>>>>> origin/main
 
         <TextView
             android:id="@+id/textVerifiedResponderStatus"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-<<<<<<< HEAD
             android:gravity="center"
             android:layout_marginTop="8dp" />
-=======
-<<<<<<< HEAD
-            android:layout_marginTop="16dp"
-            android:text="Verification Status" />
-
-        <View
-            android:id="@+id/badgePhoneVerified"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:background="#00FF00"
-            android:visibility="gone" />
-
-        <View
-            android:id="@+id/badgeIdVerified"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:background="#00FF00"
-            android:visibility="gone" />
-
-        <View
-            android:id="@+id/badgeFaceVerified"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:background="#00FF00"
-            android:visibility="gone" />
-=======
-            android:gravity="center"
-            android:layout_marginTop="8dp" />
->>>>>>> origin/main
->>>>>>> origin/main
 
         <Button
             android:id="@+id/buttonVerifyId"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-<<<<<<< HEAD
             android:text="Verify National ID"
             android:layout_marginTop="8dp" />
-=======
-<<<<<<< HEAD
-            android:text="Verify ID" />
-=======
-            android:text="Verify National ID"
-            android:layout_marginTop="8dp" />
->>>>>>> origin/main
->>>>>>> origin/main
 
         <Button
             android:id="@+id/buttonVerifySelfie"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-            android:text="Verify Selfie" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Emergency Contacts"
-            android:textStyle="bold" />
-=======
->>>>>>> origin/main
             android:text="Verify Selfie"
             android:layout_marginTop="8dp" />
 
@@ -216,80 +110,34 @@
             android:text="Emergency Contacts"
             android:textStyle="bold"
             android:layout_marginTop="24dp" />
-<<<<<<< HEAD
-=======
->>>>>>> origin/main
->>>>>>> origin/main
 
         <LinearLayout
             android:id="@+id/emergencyContactsContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-<<<<<<< HEAD
             android:orientation="vertical"
             android:layout_marginTop="8dp" />
-=======
-<<<<<<< HEAD
-            android:orientation="vertical" />
-=======
-            android:orientation="vertical"
-            android:layout_marginTop="8dp" />
->>>>>>> origin/main
->>>>>>> origin/main
 
         <Button
             android:id="@+id/buttonAddEmergencyContact"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-<<<<<<< HEAD
             android:text="+ Add Contact"
             android:layout_marginTop="8dp" />
-=======
-<<<<<<< HEAD
-            android:text="Add Emergency Contact" />
-=======
-            android:text="+ Add Contact"
-            android:layout_marginTop="8dp" />
->>>>>>> origin/main
->>>>>>> origin/main
 
         <Button
             android:id="@+id/buttonSave"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-<<<<<<< HEAD
             android:text="@string/action_save"
             android:layout_marginTop="24dp" />
-=======
-<<<<<<< HEAD
-            android:layout_marginTop="24dp"
-            android:text="Save" />
-=======
-            android:text="@string/action_save"
-            android:layout_marginTop="24dp" />
->>>>>>> origin/main
->>>>>>> origin/main
 
         <ProgressBar
             android:id="@+id/progressBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-<<<<<<< HEAD
             android:visibility="gone"
             android:layout_marginTop="16dp" />
     </LinearLayout>
 </ScrollView>
-=======
-<<<<<<< HEAD
-            android:visibility="gone" />
-
-    </LinearLayout>
-</ScrollView>
-=======
-            android:visibility="gone"
-            android:layout_marginTop="16dp" />
-    </LinearLayout>
-</ScrollView>
->>>>>>> origin/main
->>>>>>> origin/main

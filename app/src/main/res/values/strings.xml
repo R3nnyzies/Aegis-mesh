@@ -1,35 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Aegis Mesh</string>
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-    <string name="location_shared_exact">Exact Location Shared</string>
-    <string name="location_shared_approximate">Approximate Location Shared (~%1$dm)</string>
-    <string name="responder_trust_score">Trust Score: %1$d (%2$d assists)</string>
-    <string name="responder_eta">ETA: %1$d min</string>
-    <string name="hospital_distance_km">%1$.1f km away</string>
-    <string name="dialog_cancel_sos_title">Cancel SOS?</string>
-    <string name="dialog_cancel_sos_message">Are you sure you want to cancel the emergency alert?</string>
-    <string name="action_confirm">Confirm</string>
-    <string name="action_dismiss">Dismiss</string>
-
-    <plurals name="mesh_relay_peer_count">
-        <item quantity="one">Relayed by %1$d peer</item>
-        <item quantity="other">Relayed by %1$d peers</item>
-    </plurals>
-
-    <string name="action_finish_setup">Finish Setup</string>
-    <string name="action_save">Save Profile</string>
-    <string name="error_load_profile_failed">Failed to load profile.</string>
-    <string name="error_save_profile_failed">Failed to save profile.</string>
-    <string name="error_field_required">Field required</string>
-    <string name="profile_saved">Profile saved successfully</string>
-    <string name="verified_responder_badge_earned">Verified Responder: Earned</string>
-    <string name="verified_responder_badge_locked">Verified Responder: Locked</string>
-</resources>
-=======
->>>>>>> origin/main
 
     <!-- HomeActivity / MeshService status strings -->
     <string name="permissions_required_for_mesh">Bluetooth and location permissions are required for mesh networking.</string>
@@ -71,9 +42,4 @@
         <item quantity="one">Relayed via %1$d peer</item>
         <item quantity="other">Relayed via %1$d peers</item>
     </plurals>
-<<<<<<< HEAD
 </resources>
-=======
-</resources>
->>>>>>> origin/main
->>>>>>> origin/main
