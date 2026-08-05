@@ -1,93 +1,86 @@
-import requests
-from bs4 import BeautifulSoup
+import math
 import logging
+from backend.database.db import get_all_hospitals
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("AegisScraper")
 
-# In a real-world scenario, this would be a real URL for a local health ministry or hospital directory.
-# For example purposes, we simulate the scraping logic.
-MOCK_DIRECTORY_URL = "https://example-health-directory.org/clinics/kenya/juja"
-
-def scrape_clinic_directory():
+def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """
-    Simulates scraping a web page to extract clinic data and their current inventory/specialties.
+    Calculates the exact distance in kilometers between two GPS points 
+    using the Haversine formula.
     """
-    # NOTE: Since we don't have a real URL right now, we will simulate the HTML response 
-    # that BeautifulSoup would parse.
-    mock_html = """
-    <html>
-        <body>
-            <div class="clinic-listing" data-lat="-1.0945" data-lon="37.0142">
-                <h2>Juja General Hospital</h2>
-                <span class="inventory">Bandages, Oxygen, X-Ray</span>
-                <span class="distance">2.0 km away</span>
-            </div>
-            <div class="clinic-listing" data-lat="-1.1023" data-lon="37.0199">
-                <h2>JKUAT Specialized Dispensary</h2>
-                <span class="inventory">Anti-venom, Epinephrine, Asthma Inhalers</span>
-                <span class="distance">2.5 km away</span>
-            </div>
-            <div class="clinic-listing" data-lat="-1.0855" data-lon="37.0111">
-                <h2>Oasis Maternity Clinic</h2>
-                <span class="inventory">Ultrasound, Delivery Kits, Incubators</span>
-                <span class="distance">3.1 km away</span>
-            </div>
-        </body>
-    </html>
-    """
+    R = 6371.0 # Radius of the Earth in km
     
-    # In reality, you would do: 
-    # response = requests.get(MOCK_DIRECTORY_URL)
-    # soup = BeautifulSoup(response.text, 'html.parser')
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
     
-    soup = BeautifulSoup(mock_html, 'html.parser')
-    clinics = []
+    a = (math.sin(dlat / 2) * math.sin(dlat / 2) +
+         math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * 
+         math.sin(dlon / 2) * math.sin(dlon / 2))
     
-    # Parse the HTML to extract data
-    for div in soup.find_all('div', class_='clinic-listing'):
-        name = div.find('h2').text
-        inventory = div.find('span', class_='inventory').text.lower()
-        distance = div.find('span', class_='distance').text
-        lat = float(div['data-lat'])
-        lon = float(div['data-lon'])
-        
-        clinics.append({
-            "name": name,
-            "inventory": inventory,
-            "distance": distance,
-            "coordinates": {"lat": lat, "lon": lon}
-        })
-        
-    return clinics
-
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    distance = R * c
+    return distance
 
 def filter_specialized_clinics(condition: str, lat: float, lon: float):
     """
-    Cross-references the victim's condition with the scraped hospital inventory.
+    Pulls local clinics from the SQLite database, calculates their distance 
+    from the victim, and filters based on required emergency inventory.
     """
-    logger.info(f"Scraping local directories for resources related to: {condition}")
+    logger.info(f"Analyzing local database for resources related to: {condition}")
     
-    all_clinics = scrape_clinic_directory()
-    condition = condition.lower()
+    # 1. Fetch all hospitals from our SQLite database
+    all_clinics = get_all_hospitals()
     
-    # Map conditions to required keywords
-    required_keyword = ""
-    if "snakebite" in condition or "venomous spider" in condition:
-        required_keyword = "anti-venom"
-    elif "allergy" in condition or "anaphylaxis" in condition:
-        required_keyword = "epinephrine"
-    elif "pregnant" in condition or "labor" in condition:
-        required_keyword = "delivery"
-    else:
-        # If no specialized need, return the closest general hospital
-        return all_clinics[0] if all_clinics else None
+    if not all_clinics:
+        logger.warning("No clinics found in the database!")
+        return None
 
-    # Filter clinics that actually have the keyword in their scraped inventory
+    # 2. Calculate actual distance from the Android Phone's GPS for every clinic
     for clinic in all_clinics:
-        if required_keyword in clinic["inventory"]:
-            logger.info(f"MATCH FOUND: {clinic['name']} has {required_keyword}.")
-            return clinic
+        clinic['distance_km'] = calculate_distance(
+            lat, lon, 
+            clinic['latitude'], clinic['longitude']
+        )
+    
+    # Sort them so the closest ones are first in the list
+    all_clinics.sort(key=lambda x: x['distance_km'])
+    
+    condition_lower = condition.lower()
+    
+    # 3. Map the emergency condition to specific required resources
+    required_keyword = ""
+    if "spider" in condition_lower or "snake" in condition_lower or "venom" in condition_lower:
+        required_keyword = "anti-venom"
+    elif "allergy" in condition_lower or "anaphylaxis" in condition_lower:
+        required_keyword = "epinephrine"
+    elif "pregnant" in condition_lower or "labor" in condition_lower:
+        required_keyword = "delivery"
 
-    logger.warning("No specialized clinic found. Routing to nearest general hospital.")
-    return all_clinics[0] if all_clinics else None
+    # 4. Filter logic: Find the CLOSEST clinic that has the REQUIRED inventory
+    best_match = None
+    
+    if required_keyword:
+        for clinic in all_clinics:
+            inventory = clinic.get('known_inventory', '').lower()
+            if required_keyword in inventory:
+                logger.info(f"MATCH FOUND: {clinic['facility_name']} has {required_keyword}.")
+                best_match = clinic
+                break
+    
+    # 5. Fallback: If no specialized clinic is found, just route to the closest general hospital
+    if not best_match:
+        best_match = all_clinics[0]
+        logger.warning(f"No specialized clinic found. Routing to nearest facility: {best_match['facility_name']}")
+
+    # 6. Format the response exactly how the Android App's Hospital.java model expects it
+    return {
+        "name": best_match['facility_name'],
+        "inventory": best_match.get('known_inventory', 'General Supplies'),
+        "distance": f"{best_match['distance_km']:.1f} km away",
+        "coordinates": {
+            "lat": best_match['latitude'],
+            "lon": best_match['longitude']
+        }
+    }

@@ -1,49 +1,97 @@
 import sqlite3
 import os
+import csv
 import logging
+from backend.database.models import EmergencyLogModel
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("AegisDatabase")
 
-# Define exact file paths based on your file tree structure
+# Define exact file paths
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DB_FILE_PATH = os.path.join(BASE_DIR, 'database', 'aegismesh.db')
 SCHEMA_PATH = os.path.join(BASE_DIR, 'database', 'schema.sql')
+HOSPITALS_CSV_PATH = os.path.join(BASE_DIR, 'database', 'hospitals.csv')
 
 def get_db_connection():
-    """
-    Opens a connection to the SQLite database.
-    Using sqlite3.Row allows us to access columns by name (e.g., row['full_name']).
-    """
+    """Opens a connection to the SQLite database."""
     conn = sqlite3.connect(DB_FILE_PATH)
     conn.row_factory = sqlite3.Row
     return conn
 
 def init_db():
-    """
-    Checks if the database exists. If it doesn't, it creates it by 
-    executing the schema.sql file.
-    """
-    if not os.path.exists(DB_FILE_PATH):
-        logger.info(f"Database not found. Initializing new database at {DB_FILE_PATH}...")
+    """Builds the database and seeds it with CSV data if it's new."""
+    is_new_db = not os.path.exists(DB_FILE_PATH)
+    
+    conn = get_db_connection()
+    try:
+        # 1. Execute the Schema
+        with open(SCHEMA_PATH, 'r') as f:
+            conn.executescript(f.read())
         
-        # Connect to DB (this creates the file if it doesn't exist)
-        conn = get_db_connection()
-        
-        try:
-            # Read and execute the SQL schema file
-            with open(SCHEMA_PATH, 'r') as f:
-                schema_script = f.read()
-                conn.executescript(schema_script)
+        # 2. Seed the database from CSV (Only if it's a fresh database)
+        if is_new_db and os.path.exists(HOSPITALS_CSV_PATH):
+            logger.info("New database detected. Seeding from hospitals.csv...")
+            seed_hospitals_from_csv(conn)
             
-            conn.commit()
-            logger.info("Database schema initialized successfully.")
-        except Exception as e:
-            logger.error(f"Failed to initialize database: {e}")
-        finally:
-            conn.close()
-    else:
-        logger.info("Database already exists. Skipping initialization.")
+        conn.commit()
+        logger.info("Database initialized successfully.")
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {e}")
+    finally:
+        conn.close()
+
+def seed_hospitals_from_csv(conn):
+    """Reads database/hospitals.csv and inserts it into the SQL table."""
+    try:
+        with open(HOSPITALS_CSV_PATH, 'r') as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                conn.execute('''
+                    INSERT INTO hospitals (facility_name, latitude, longitude, known_inventory, is_specialized)
+                    VALUES (?, ?, ?, ?, ?)
+                ''', (
+                    row['facility_name'], 
+                    float(row['latitude']), 
+                    float(row['longitude']), 
+                    row['known_inventory'], 
+                    int(row['is_specialized'])
+                ))
+        logger.info("Hospitals seeded successfully.")
+    except Exception as e:
+        logger.error(f"Error seeding CSV: {e}")
+
+# ==========================================
+# CRUD OPERATIONS FOR THE BACKEND SERVICES
+# ==========================================
+
+def get_all_hospitals():
+    """Fetches all known hospitals from the database."""
+    conn = get_db_connection()
+    hospitals = conn.execute("SELECT * FROM hospitals").fetchall()
+    conn.close()
+    return [dict(row) for row in hospitals]
+
+def log_emergency(emergency: EmergencyLogModel):
+    """Saves a permanent record of an SOS event."""
+    conn = get_db_connection()
+    try:
+        conn.execute('''
+            INSERT INTO emergencies (victim_name, emergency_type, latitude, longitude, hospital_routed_to, ai_instructions_given)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (
+            emergency.victim_name,
+            emergency.emergency_type,
+            emergency.latitude,
+            emergency.longitude,
+            emergency.hospital_routed_to,
+            emergency.ai_instructions_given
+        ))
+        conn.commit()
+        logger.info(f"Emergency logged successfully for {emergency.victim_name}.")
+    except Exception as e:
+        logger.error(f"Failed to log emergency: {e}")
+    finally:
+        conn.close()
 
 # Run initialization immediately when this module is imported
 init_db()
